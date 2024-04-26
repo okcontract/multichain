@@ -58,7 +58,7 @@ export class Address<N extends Network = EVMType> {
   /**
    * @todo is the address secure
    * @todo include source/traceability?
-   * - verified wallet, signed datacache data
+   * - verified wallet, signed OKcontract data
    */
   readonly _security: boolean;
 

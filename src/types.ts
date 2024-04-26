@@ -12,7 +12,7 @@ export type ChainType = string;
  * OKcontract Chain definition.
  */
 export interface Chain {
-  /** datacache ID (without prefix) */
+  /** OKcontract ID (without prefix) */
   id: ChainType;
   /** display name */
   name: string;
@@ -22,7 +22,7 @@ export interface Chain {
   net: Network;
   /** testnet */
   test?: boolean;
-  /** currency datacache query */
+  /** currency OKcontract query */
   currency: TokenQuery;
   /** list of RPCs as string */
   rpc: string[];
