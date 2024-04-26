@@ -234,8 +234,7 @@ test("starkCall", async () => {
     ),
     ty: "c"
   });
-  const bal = starkCall(
-    local,
+  const bal = local.call(
     ethERC20Address,
     proxy.new(erc20AbiStarknet),
     proxy.new("balanceOf"),
