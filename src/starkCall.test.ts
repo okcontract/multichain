@@ -1,5 +1,5 @@
+import { expect, test } from "bun:test";
 import { toHex } from "viem";
-import { expect, test } from "vitest";
 
 import { type AnyCell, Sheet, SheetProxy, uncellify } from "@okcontract/cells";
 

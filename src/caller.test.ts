@@ -1,5 +1,5 @@
+import { expect, test } from "bun:test";
 import { type Abi, parseAbi } from "viem";
-import { expect, test } from "vitest";
 
 import { Sheet, SheetProxy } from "@okcontract/cells";
 import { Address, type EVMAddress } from "./address";

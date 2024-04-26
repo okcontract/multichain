@@ -36,7 +36,8 @@
     "happy-dom": "13.0.2",
     "terser": "5.26.0",
     "typescript": "5.4.5",
-    "vite": "5.2.10"
+    "vite": "5.2.10",
+    "@types/bun": "latest"
   },
   "repository": {
     "type": "git",

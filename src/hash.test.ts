@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test } from "bun:test";
 
 test("using UInt8Array as map keys", () => {
   const map = new Map();
