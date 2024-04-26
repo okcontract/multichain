@@ -245,7 +245,7 @@ test("starkCall", async () => {
     ])
   );
 
-  const res = (await uncellify(bal)) as bigint[];
+  const res = (await uncellify(bal)) as unknown as bigint[];
   expect(res).toHaveLength(1);
   expect(res[0]).toBeGreaterThanOrEqual(0n);
 });
