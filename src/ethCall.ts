@@ -5,7 +5,14 @@ import {
   getAbiItem
 } from "viem";
 
-import type { AnyCell, MapCell, SheetProxy } from "@okcontract/cells";
+import {
+  type AnyCell,
+  type MapCell,
+  type SheetProxy,
+  cellify,
+  collector,
+  uncellify
+} from "@okcontract/cells";
 
 import type { Address, EVMAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
@@ -50,13 +57,16 @@ export const ethCallQuery = <T extends unknown[]>(
           ? // @ts-expect-error Type instantiation is excessively deep and possibly infinite.
             getAbiItem({ abi, name: functionName, args: args || [] })
           : null;
+
+      // @fixme hack should already be uncellified
+      const uncArgs = await uncellify(args);
       return abiItem && args && "inputs" in abiItem
         ? abiItem?.inputs?.length === args?.length &&
             encodeFunctionData({
               abi,
               functionName,
               // biome-ignore lint: lint/suspicious/noExplicitAny
-              args: (args || []) as any[]
+              args: (uncArgs || []) as any[]
             })
         : null;
     },
@@ -100,6 +110,7 @@ export const ethCall = <T extends unknown | unknown[]>(
       ? `${opts?.name}.${functionName.id}`
       : `encodeCall.cell:${functionName.id}`
   });
+  const coll = collector(proxy);
   return proxy.map(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
@@ -110,7 +121,8 @@ export const ethCall = <T extends unknown | unknown[]>(
           functionName: _functionName,
           data: _cell.result as `0x${string}`
         }) as NonNullable<T>;
-        return opts?.convertFromNative(decoded) || decoded;
+        const converted = opts.convertFromNative(decoded);
+        return coll(cellify(proxy, converted));
       } catch (error) {
         console.log("decodeFunctionResult-Error", {
           error,

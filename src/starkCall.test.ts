@@ -1,7 +1,7 @@
 import { toHex } from "viem";
 import { expect, test } from "vitest";
 
-import { type AnyCell, Sheet, SheetProxy } from "@okcontract/cells";
+import { type AnyCell, Sheet, SheetProxy, uncellify } from "@okcontract/cells";
 
 import { Address, type EVMAddress } from "./address";
 import { LocalRPCSubscriber } from "./local";
@@ -246,7 +246,7 @@ test("starkCall", async () => {
     ])
   );
 
-  const res = (await bal.get()) as bigint[];
+  const res = (await uncellify(bal)) as bigint[];
   expect(res).toHaveLength(1);
   expect(res[0]).toBeGreaterThanOrEqual(0n);
 });
@@ -290,7 +290,7 @@ test("starknet multicall", async () => {
   // only one call
   expect(await multi._counter("starknet")).toBe(1);
 
-  const res1 = await bal1.get();
+  const res1 = await uncellify(bal1);
   expect(decodeShortString(toHex(res1[0]))).toEqual("ETH");
-  expect(await bal2.get())[0].toBeGreaterThanOrEqual(0n);
+  expect((await uncellify(bal2))[0]).toBeGreaterThanOrEqual(0n);
 });
