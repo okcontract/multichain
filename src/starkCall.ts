@@ -1,12 +1,6 @@
 import { type Abi, CairoCustomEnum, CallData, type Calldata } from "starknet";
 
-import {
-  type AnyCell,
-  type MapCell,
-  _cellify,
-  _uncellify,
-  collector
-} from "@okcontract/cells";
+import type { AnyCell, MapCell } from "@okcontract/cells";
 
 import type { Address, EVMAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
@@ -203,13 +197,7 @@ export const starkCall = <
       async (_addr, _method, _callData) =>
         [
           "starknet",
-          starkCallQuery(
-            _addr.addr,
-            _method,
-            _callData,
-            await _uncellify(converted),
-            _options
-          )
+          starkCallQuery(_addr.addr, _method, _callData, converted, _options)
         ] as [string, StarkCallQueryType]
     );
 
@@ -233,22 +221,16 @@ export const call = (
       ? `${opts?.name}.${functionName.id}`
       : `call.cell:${functionName.id}`
   });
-  const coll = collector(proxy);
   return proxy.map(
     [cell, functionName],
     (_cell, _functionName) => {
       try {
         if (!_cell || "error" in _cell || !_cell?.result) return null;
-        if ("multi" in _cell)
-          return coll(
-            _cellify(
-              proxy,
-              opts?.convertFromNative(_cell.result) || _cell.result
-            )
-          );
+        if ("multi" in _cell) return;
+        opts?.convertFromNative(_cell.result) || _cell.result;
+
         const parsed = callData.parse(_functionName, _cell?.result);
-        const converted = opts?.convertFromNative(parsed) || parsed;
-        return [coll(_cellify(proxy, converted))];
+        return opts?.convertFromNative(parsed) || parsed;
       } catch (error) {
         return error;
       }
