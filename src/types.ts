@@ -17,7 +17,7 @@ export interface Chain {
   /** display name */
   name: string;
   /** chain ID */
-  numid: bigint;
+  numid: bigint; // cspell:disable-line
   /** network */
   net: Network;
   /** testnet */
