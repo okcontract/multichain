@@ -130,13 +130,16 @@ export class RPC {
   };
 
   call: RPCCaller = async (input: RPCQuery[]) => {
+    // remove optional args from queries
+    const newInputs = input.map((_input) => ({ ..._input, args: undefined }));
+
     try {
       const req = {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: jsonStringify(input)
+        body: jsonStringify(newInputs)
       };
       // @todo measure stats on response time
       // We switch to a new endpoint for each request.

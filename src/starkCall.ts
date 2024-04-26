@@ -35,12 +35,12 @@ export type StarkCallQueryType = {
       contract_address: `0x${string}`;
       entry_point_selector: string;
       calldata: Calldata;
-      args?: string[] | bigint[];
     };
     block_id: BlockNumberOption | BlockHashOption | BlockTag | null;
   };
-
   expiry?: number;
+  // args must be removed before sending query
+  args?: string[] | bigint[];
 };
 export type StarkCallResult = {
   result: string[];
@@ -269,11 +269,11 @@ export const starkCallQuery = (
     request: {
       contract_address: to.toString(),
       entry_point_selector: getSelectorFromName(method),
-      calldata: callData.compile(method, args),
-      args
+      calldata: callData.compile(method, args)
     },
     block_id: options?.block || ("latest" as BlockTag)
-  }
+  },
+  args
 });
 
 export const starkMulticall = (
@@ -285,7 +285,7 @@ export const starkMulticall = (
     execution: execution,
     to: dynamicFelt(call.params.request.contract_address),
     selector: dynamicFelt(call.params.request.entry_point_selector),
-    calldata: call.params.request.args.map((_arg) => dynamicCallData(_arg))
+    calldata: call.args.map((_arg) => dynamicCallData(_arg))
   }));
   return starkCallQuery(addr, "aggregate", callDataMulticall, [agg]);
 };
