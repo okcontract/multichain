@@ -83,15 +83,31 @@ the value will be recomputed automatically.
 `multichain` natively supports [Starknet](https://www.starknet.io/) in
 addition to Ethereum and EVMs, enabling dApps to query both networks together.
 
+There is no difference in the call, just make sure that both `contract` and
+`abi` match a Starknet contract:
+
+```ts
+const contract = proxy.new({
+    chain: "starknet",
+    addr: new Address(
+      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+      StarkNet
+    )
+  });
+const abi = proxy.new(...)
+...
+const value = local.call(contract, abi, method, args);
+```
+
 # Design & Philosophy
+
+This is a low-level library, providing fine-grained control to library or
+precisely crafted dApps implementors. We will release a higher-level consumer
+for `multichain` soon, that will be very simple to use to build dApps quickly
+and with high assurance.
 
 We aim for ease of use and correction, so chasing down any bug is our top
 priority.
-
-Remind this is a low-level library, providing fine-grained control to
-framework implementors. We will release a higher-level consumer for
-`multichain` soon, that will be very simple to use to build dApps quickly and
-with high assurance.
 
 # About
 
