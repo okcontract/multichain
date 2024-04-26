@@ -1,0 +1,56 @@
+{
+  "name": "@okcontract/multichain",
+  "version": "0.1.0",
+  "description": "Low-level library for functional reactive blockchain RPC calls",
+  "private": false,
+  "main": "dist/multichain.umd.cjs",
+  "module": "dist/multichain.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/multichain.js",
+      "require": "./dist/multichain.umd.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run format && vite build",
+    "test": "vitest run --passWithNoTests",
+    "coverage": "vitest run --coverage",
+    "definitions": "tsc --project tsconfig.build.json",
+    "prepublishOnly": "npm test && npm run build && npm run check && npm run definitions",
+    "check": "npx @biomejs/biome check src",
+    "format": "npx @biomejs/biome format src --write && npx @biomejs/biome check src --apply",
+    "formatReadme": "prettier README.md --prose-wrap always --print-width 78 -w"
+  },
+  "dependencies": {
+    "@okcontract/cells": "^0.3.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.6.1",
+    "@types/node": "^20.11.5",
+    "@vitest/coverage-v8": "^1.2.2",
+    "happy-dom": "13.0.2",
+    "immer": "^10.0.3",
+    "terser": "5.26.0",
+    "typescript": "5.3.3",
+    "vite": "5.0.12",
+    "vitest": "1.1.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okcontract/multichain.git"
+  },
+  "author": "Henri Binsztok",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/okcontract/multichain/issues"
+  },
+  "homepage": "https://github.com/okcontract/multichain"
+}
