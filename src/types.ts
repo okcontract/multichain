@@ -97,7 +97,6 @@ export type RawRPCQuery =
 export type RPCQueryOptions = {
   // debug name
   name?: string;
-
   retry?: number;
   validity?: number;
   failOnError?: boolean;
