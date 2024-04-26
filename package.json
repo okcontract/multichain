@@ -16,8 +16,8 @@
   "files": ["dist/", "README.md", "LICENSE"],
   "scripts": {
     "build": "npm run format && vite build",
-    "test": "vitest run --passWithNoTests",
-    "coverage": "vitest run --coverage",
+    "test": "bun test",
+    "coverage": "bun test --coverage",
     "definitions": "tsc --project tsconfig.build.json",
     "prepublishOnly": "npm test && npm run build && npm run check && npm run definitions",
     "check": "npx @biomejs/biome check src",
@@ -32,12 +32,11 @@
   "devDependencies": {
     "@biomejs/biome": "^1.7.1",
     "@types/node": "^20.12.7",
-    "@vitest/coverage-v8": "^1.5.2",
+    "bun": "^1.1.4",
     "happy-dom": "13.0.2",
     "terser": "5.26.0",
     "typescript": "5.4.5",
-    "vite": "5.2.10",
-    "vitest": "1.5.2"
+    "vite": "5.2.10"
   },
   "repository": {
     "type": "git",
