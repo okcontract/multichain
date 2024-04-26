@@ -47,7 +47,8 @@ export const ethCallQuery = <T extends unknown[]>(
     async (abi, args, functionName) => {
       const abiItem =
         abi && functionName
-          ? getAbiItem({ abi, name: functionName, args: args || [] })
+          ? // @ts-expect-error Type instantiation is excessively deep and possibly infinite.
+            getAbiItem({ abi, name: functionName, args: args || [] })
           : null;
       return abiItem && args && "inputs" in abiItem
         ? abiItem?.inputs?.length === args?.length &&

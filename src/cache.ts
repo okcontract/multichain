@@ -3,7 +3,8 @@ import {
   type SheetProxy,
   type ValueCell,
   WrappedCell,
-  clock
+  clock,
+  clockWork
 } from "@okcontract/cells";
 
 import type { RPC } from "./caller";
@@ -117,7 +118,9 @@ export class RPCCache {
     this._LIVE = proxy.new(true, "cache.LIVE");
 
     const cl = clock(proxy, this._LIVE, options.loopDelay);
-    this._cache = cl.work(
+    this._cache = clockWork(
+      proxy,
+      cl,
       [this._expiry, this._sub, this._cacheQueue, rpc._options],
       async (
         exp: Record<RPCQueryKey, number>,
