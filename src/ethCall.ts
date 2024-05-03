@@ -61,7 +61,7 @@ export const ethCallQuery = <T extends unknown[]>(
       // @fixme hack should already be uncellified
       const uncArgs = await uncellify(args);
       return abiItem && args && "inputs" in abiItem
-        ? abiItem?.inputs?.length === args?.length &&
+        ? abiItem?.inputs?.length === uncArgs?.length &&
             encodeFunctionData({
               abi,
               functionName,
@@ -121,14 +121,17 @@ export const ethCall = <T extends unknown | unknown[]>(
           functionName: _functionName,
           data: _cell.result as `0x${string}`
         }) as NonNullable<T>;
+
         const converted = opts.convertFromNative(decoded);
-        return coll(cellify(proxy, converted));
+        // @todo reactive cellify
+        return cellify(proxy, converted);
       } catch (error) {
-        console.log("decodeFunctionResult-Error", {
-          error,
-          _functionName,
-          query
-        });
+        // console.log({ error });
+        // console.log("decodeFunctionResult-Error", {
+        //   error,
+        //   _functionName,
+        //   query
+        // });
         return error;
       }
     },
