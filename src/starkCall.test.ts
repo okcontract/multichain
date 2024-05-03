@@ -1,7 +1,12 @@
 import { expect, test } from "bun:test";
 import { toHex } from "viem";
 
-import { type AnyCell, Sheet, SheetProxy, uncellify } from "@okcontract/cells";
+import {
+  type AnyCell,
+  Sheet,
+  SheetProxy,
+  uncellify,
+} from "@okcontract/cells";
 
 import { Address, type EVMAddress } from "./address";
 import { LocalRPCSubscriber } from "./local";
@@ -244,6 +249,7 @@ test("starkCall", async () => {
       )
     ])
   );
+  // await sleep(4000);
 
   const res = (await uncellify(bal)) as unknown as bigint[];
   expect(res).toHaveLength(1);

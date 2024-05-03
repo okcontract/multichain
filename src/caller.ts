@@ -147,6 +147,7 @@ export class RPC {
       const endpoints = await this._endpoints.get();
       if (endpoints instanceof Error) throw endpoints;
       const response = await fetch(endpoints[this._current], req);
+      console.log("rpc URL=", { url: endpoints[this._current] });
       if (!response.ok) {
         if (await this._rotate()?.get()) {
           // @todo no need to rebuild the request

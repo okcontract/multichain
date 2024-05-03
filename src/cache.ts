@@ -16,10 +16,12 @@ import { decodeStarkMultiCall } from "./starkCall";
 import type {
   ChainType,
   RPCError,
+  RPCErrorResult,
   RPCQuery,
   RPCResult,
   RawRPCQuery
 } from "./types";
+import { retryCodes } from "./errors";
 
 export const nowPlus = async (
   now: () => number | Promise<number>,
@@ -46,6 +48,17 @@ type RPCCacheOptions = {
    */
   errorOnNull?: boolean;
 };
+
+type ActionError = {
+  message?: string;
+};
+
+type ActionSet = {
+  key?: string;
+  value?: RPCResult<RPCQuery> | RPCErrorResult<RPCQuery>;
+};
+
+type Action = { type: string } & (ActionError | ActionSet);
 
 type Cache = Record<RPCQueryKey, CacheValue<RawRPCQuery>>;
 type CacheValue<Q extends RawRPCQuery> = RPCResult<Q>;
@@ -160,10 +173,44 @@ export class RPCCache {
         this._counter++;
         // RPC call
         const outputs = await this._RPC.call(inputs);
+        console.log("rpc out", { outputs });
+        // whole multicall fail
+        if (outputs && "id" in outputs && outputs.id === "-1") {
+          if (!("result" in outputs)) {
+            console.log("whole multicall fail", { requested, outputs });
+          } else {
+            console.log("whole multicall OK", {
+              inputs,
+              outputs,
+              rety: this._retry
+            });
+            // this._retry.clear();
+            // const cell = (prev?.[key] ||
+            //   cacheQueue.get(key)) as ValueCell<unknown>;
+          }
+        }
+        // const actionsInit: Action[] =
+        //   outputs &&
+        //   "id" in outputs &&
+        //   outputs.id === "-1" &&
+        //   !("result" in outputs)
+        //     ? [
+        //         {
+        //           type: "error",
+        //           message: "whole multicall failed"
+        //         }
+        //       ]
+        //     : [];
         // list of call / multicall data
         const actions = outputs.reduce((actions, output) => {
           const idx = inputs.findIndex((input) => input.id === output.id);
-          if (idx === -1) return actions; // Skip irrelevant outputs
+          if (idx === -1) {
+            actions.push({
+              type: "error",
+              message: "multicall failed"
+            });
+            return actions; // Skip irrelevant outputs
+          }
           if (mid && output.id === mid) {
             if ("error" in output) {
               actions.push({
@@ -196,49 +243,60 @@ export class RPCCache {
           return actions;
         }, []);
 
+        const setActions = actions.filter(
+          (action) => action.type === "set"
+        ) as ActionSet[];
         const newCache = Object.fromEntries(
-          actions
-            .filter((action) => action.type === "set")
-            .map(({ key, value }) => {
-              if (isErrorResult(value) || value?.result === null) {
-                const err = value?.error;
-                rpcOptions.RPCOptions.dev &&
-                  console.log("error=", { key, err });
+          setActions.map(({ key, value }) => {
+            console.log("action=>", { key, value });
+            if (isErrorResult(value) || value?.result === null) {
+              // we rotate rpc and retry on a set of errors
+              const err = "error" in value && value.error;
+              if (retryCodes.includes(err.code)) {
+                console.log("retryable error found");
+                this._retry.set(key, 0);
+                this._RPC._rotate();
               }
-              // Resolve all promises, notifications.
-              const pr = this._promises.get(key);
-              //  If there are promises, resolve them and delete them.
-              if (pr) {
-                this._promises.delete(key);
-                for (const p of pr) p(value);
-              }
-              // Update the cell itself that must exist by calling `cell` before.
-              const cell = (prev?.[key] ||
-                cacheQueue.get(key)) as ValueCell<unknown>;
-              if (!cell) throw new Error(`unknown key: ${key}`);
-              // if validity => update expiry with now + validity
-              // or if the query is retry-able, we set a new expiry to be
-              // picked up by the loop.
-              if (
-                this._validity.has(key) ||
-                (this._retry.has(key) &&
-                  (isErrorResult(value) || value?.result === null))
-              ) {
-                updateExpiry.push([
-                  key,
-                  nowPlus(
-                    options.now,
-                    this._validity.has(key)
-                      ? this._validity.get(key)
-                      : this._retry.get(key)
-                  )
-                ]);
-              } else this._retry.delete(key);
-
+              console.log("error=", { key, err });
+            }
+            // Resolve all promises, notifications.
+            const pr = this._promises.get(key);
+            //  If there are promises, resolve them and delete them.
+            if (pr) {
+              this._promises.delete(key);
+              for (const p of pr) p(value);
+            }
+            // Update the cell itself that must exist by calling `cell` before.
+            const cell = (prev?.[key] ||
+              cacheQueue.get(key)) as ValueCell<unknown>;
+            if (!cell) throw new Error(`unknown key: ${key}`);
+            // if validity => update expiry with now + validity
+            // or if the query is retry-able, we set a new expiry to be
+            // picked up by the loop.
+            if (
+              this._validity.has(key) ||
+              (this._retry.has(key) &&
+                (isErrorResult(value) || value?.result === null))
+            ) {
+              console.log("update expiry");
+              updateExpiry.push([
+                key,
+                nowPlus(
+                  options.now,
+                  this._validity.has(key)
+                    ? this._validity.get(key)
+                    : this._retry.get(key)
+                )
+              ]);
+            } else {
+              console.log("done removing retry");
+              this._retry.delete(key);
               cell.set(value);
-              this._remove(key);
-              return [key, cell];
-            })
+            }
+
+            this._remove(key);
+            return [key, cell];
+          })
         );
 
         const updateExpiryResolved = Object.fromEntries(
@@ -303,7 +361,8 @@ export class RPCCache {
     rpcOpts.RPCOptions.dev && console.log({ cache: "rpc", key, newCell: q });
     // add map of query key and query
     this._queries.set(key, q);
-    const cell = this._proxy.new(pr, `rpc:${q.method}`) as ValueCell<
+    // we probably want to be undefined first instead of null until its resolved
+    const cell = this._proxy.new(undefined, `rpc:${q.method}`) as ValueCell<
       CacheValue<RawRPCQuery>
     >;
     this._cacheQueue.update((_c) => {
