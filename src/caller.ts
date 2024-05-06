@@ -105,7 +105,9 @@ export class RPC {
     getter: Map<RPCQueryKey, RawRPCQuery>,
     options: ChainRPCOptions
   ): [RawRPCQuery[], RPCQueryKey[]] => {
-    if (!options.multiCall) return [keys.map((key) => getter.get(key)), []];
+    // skip multicall if only one query
+    if (!options.multiCall || keys.length === 1)
+      return [keys.map((key) => getter.get(key)), []];
     // split the calls, other RPC queries and list of call keys
     const { calls, others, mck } = keys.reduce(
       (result, key) => {
