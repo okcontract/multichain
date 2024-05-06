@@ -304,7 +304,7 @@ export class RPCCache {
         );
 
         // update expiries after work and before new tick to prevent cancellation
-        proxy._sheet.queue(this._expiry, { ...exp, ...updateExpiryResolved });
+        proxy._sheet.queue(this._expiry, { ...updateExpiryResolved });
 
         return {
           ...(prev || ({} as Cache)),
