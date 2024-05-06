@@ -168,7 +168,8 @@ export class RPC {
         }
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      return response.json();
+      const result = await response.json();
+      return result?.length ? result : [result];
     } catch (error) {
       if (await this._rotate()?.get()) {
         // @todo no need to rebuild the request
