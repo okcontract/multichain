@@ -25,6 +25,7 @@ export type RPCOptions = {
   convertFromNative: (v: unknown) => unknown;
   loopDelay: number; // in ms
   dev: boolean;
+  rateLimit: number;
 };
 
 export type ChainRPCOptions = {
