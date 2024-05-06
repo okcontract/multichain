@@ -173,34 +173,7 @@ export class RPCCache {
         this._counter++;
         // RPC call
         const outputs = await this._RPC.call(inputs);
-        console.log("rpc out", { outputs });
-        // whole multicall fail
-        if (outputs && "id" in outputs && outputs.id === "-1") {
-          if (!("result" in outputs)) {
-            console.log("whole multicall fail", { requested, outputs });
-          } else {
-            console.log("whole multicall OK", {
-              inputs,
-              outputs,
-              rety: this._retry
-            });
-            // this._retry.clear();
-            // const cell = (prev?.[key] ||
-            //   cacheQueue.get(key)) as ValueCell<unknown>;
-          }
-        }
-        // const actionsInit: Action[] =
-        //   outputs &&
-        //   "id" in outputs &&
-        //   outputs.id === "-1" &&
-        //   !("result" in outputs)
-        //     ? [
-        //         {
-        //           type: "error",
-        //           message: "whole multicall failed"
-        //         }
-        //       ]
-        //     : [];
+        if (!outputs) return;
         // list of call / multicall data
         const actions = outputs.reduce((actions, output) => {
           const idx = inputs.findIndex((input) => input.id === output.id);
