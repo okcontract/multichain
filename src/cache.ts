@@ -166,6 +166,7 @@ export class RPCCache {
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
           : [null];
         const [inputs, mck, mid] = enumerated;
+        // non multicall
         const requestedOthers =
           requested && enumerated
             ? requested.filter((key) => !mck.includes(key))
@@ -174,8 +175,11 @@ export class RPCCache {
         // RPC call
         const outputs = await this._RPC.call(inputs);
         if (!outputs) return;
+
         // list of call / multicall data
+        // matching input requests with outputs
         const actions = outputs.reduce((actions, output) => {
+          // no match
           const idx = inputs.findIndex((input) => input.id === output.id);
           if (idx === -1) {
             actions.push({
@@ -184,6 +188,8 @@ export class RPCCache {
             });
             return actions; // Skip irrelevant outputs
           }
+
+          // multicall match
           if (mid && output.id === mid) {
             if ("error" in output) {
               actions.push({
@@ -210,6 +216,7 @@ export class RPCCache {
             // biome-ignore lint/performance/noAccumulatingSpread: convenience
             return [...actions, ...multicallActions];
           }
+          // non multicall
           const key = requestedOthers[idx - (mck.length ? 1 : 0)];
           if (key === undefined) return actions;
           actions.push({ type: "set", key, value: output });
@@ -229,16 +236,14 @@ export class RPCCache {
         }
         const newCache = Object.fromEntries(
           setActions.map(({ key, value }) => {
-            console.log("action=>", { key, value });
             if (isErrorResult(value) || value?.result === null) {
               // we rotate rpc and retry on a set of errors
               const err = "error" in value && value.error;
               if (retryCodes.includes(err.code)) {
-                console.log("retryable error found");
-                this._retry.set(key, 0);
+                this._retry.set(key, 1);
                 this._RPC._rotate();
               }
-              console.log("error=", { key, err });
+              // console.log("error=", { key, err });
             }
             // Resolve all promises, notifications.
             const pr = this._promises.get(key);
@@ -259,7 +264,6 @@ export class RPCCache {
               (this._retry.has(key) &&
                 (isErrorResult(value) || value?.result === null))
             ) {
-              console.log("update expiry");
               updateExpiry.push([
                 key,
                 nowPlus(
@@ -270,7 +274,6 @@ export class RPCCache {
                 )
               ]);
             } else {
-              console.log("done removing retry");
               this._retry.delete(key);
               cell.set(value);
             }
