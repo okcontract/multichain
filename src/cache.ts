@@ -246,6 +246,14 @@ export class RPCCache {
         const setActions = actions.filter(
           (action) => action.type === "set"
         ) as ActionSet[];
+        const setErrors = actions.filter(
+          (action) => action.type === "error"
+        ) as ActionError[];
+        // error due to whole rpc error
+        if (setErrors.length) {
+          this._RPC._rotate();
+          return;
+        }
         const newCache = Object.fromEntries(
           setActions.map(({ key, value }) => {
             console.log("action=>", { key, value });
