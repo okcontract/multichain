@@ -256,13 +256,12 @@ export class RPCCache {
             const cell = (prev?.[key] ||
               cacheQueue.get(key)) as ValueCell<unknown>;
             if (!cell) throw new Error(`unknown key: ${key}`);
-            // if validity => update expiry with now + validity
-            // or if the query is retry-able, we set a new expiry to be
+
+            // if the query is retry-able, we set a new expiry to be
             // picked up by the loop.
             if (
-              this._validity.has(key) ||
-              (this._retry.has(key) &&
-                (isErrorResult(value) || value?.result === null))
+              this._retry.has(key) &&
+              (isErrorResult(value) || value?.result === null)
             ) {
               updateExpiry.push([
                 key,
@@ -274,6 +273,20 @@ export class RPCCache {
                 )
               ]);
             } else {
+              // if validity => update expiry with now + validity to
+              // be picked up by the loop
+              if (this._validity.has(key)) {
+                updateExpiry.push([
+                  key,
+                  nowPlus(
+                    options.now,
+                    this._validity.has(key)
+                      ? this._validity.get(key)
+                      : this._retry.get(key)
+                  )
+                ]);
+              }
+
               this._retry.delete(key);
               cell.set(value);
             }
