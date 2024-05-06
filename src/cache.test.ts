@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
 import { Sheet, SheetProxy, sleep } from "@okcontract/cells";
 

@@ -27,7 +27,7 @@ export class RPC {
   _current: number;
   protected _count: number;
 
-  //** rate limiting */
+  /** rate limiting */
   _last: number; // in ms
   _rateLimit: number; // in ms
 
