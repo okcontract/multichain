@@ -155,12 +155,10 @@ export class RPC {
       const endpoints = await this._endpoints.get();
       if (endpoints instanceof Error) throw endpoints;
       const now = Date.now();
-      if (now - this._last < this._rateLimit) {
-        console.log("Rate Limiting ...", { req });
-        return;
-      }
+      if (now - this._last < this._rateLimit) return;
+
       this._last = now;
-      console.log("Calling URL=", { url: endpoints[this._current] });
+      // console.log("Calling URL=", { url: endpoints[this._current] });
       const response = await fetch(endpoints[this._current], req);
 
       if (!response.ok) {
