@@ -39,8 +39,8 @@ export const mumbai: Chain = {
   net: "evm",
   numid: 80001n,
   rpc: [
-    "https://rpc.ankr.com/polygon_mumbai",
-    "https://polygon-mumbai-pokt.nodies.app"
+    "https://polygon-mumbai.gateway.tenderly.co",
+    "https://polygon-testnet.public.blastapi.io"
   ],
   test: true
 };
