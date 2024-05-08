@@ -9,6 +9,7 @@ import {
 
 import type { RPC } from "./caller";
 import { isErrorResult } from "./error";
+import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
 import type { ChainRPCOptions, RPCOptions } from "./options";
@@ -21,7 +22,6 @@ import type {
   RPCResult,
   RawRPCQuery
 } from "./types";
-import { retryCodes } from "./errors";
 
 export const nowPlus = async (
   now: () => number | Promise<number>,
