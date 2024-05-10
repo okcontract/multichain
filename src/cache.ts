@@ -9,6 +9,7 @@ import {
 
 import type { RPC } from "./caller";
 import { isErrorResult } from "./error";
+import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
 import type { ChainRPCOptions, RPCOptions } from "./options";
@@ -16,6 +17,7 @@ import { decodeStarkMultiCall } from "./starkCall";
 import type {
   ChainType,
   RPCError,
+  RPCErrorResult,
   RPCQuery,
   RPCResult,
   RawRPCQuery
@@ -46,6 +48,17 @@ type RPCCacheOptions = {
    */
   errorOnNull?: boolean;
 };
+
+type ActionError = {
+  message?: string;
+};
+
+type ActionSet = {
+  key?: string;
+  value?: RPCResult<RPCQuery> | RPCErrorResult<RPCQuery>;
+};
+
+type Action = { type: string } & (ActionError | ActionSet);
 
 type Cache = Record<RPCQueryKey, CacheValue<RawRPCQuery>>;
 type CacheValue<Q extends RawRPCQuery> = RPCResult<Q>;
@@ -153,6 +166,7 @@ export class RPCCache {
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
           : [null];
         const [inputs, mck, mid] = enumerated;
+        // non multicall
         const requestedOthers =
           requested && enumerated
             ? requested.filter((key) => !mck.includes(key))
@@ -160,10 +174,22 @@ export class RPCCache {
         this._counter++;
         // RPC call
         const outputs = await this._RPC.call(inputs);
+        if (!outputs) return;
+
         // list of call / multicall data
+        // matching input requests with outputs
         const actions = outputs.reduce((actions, output) => {
+          // no match
           const idx = inputs.findIndex((input) => input.id === output.id);
-          if (idx === -1) return actions; // Skip irrelevant outputs
+          if (idx === -1) {
+            actions.push({
+              type: "error",
+              message: "multicall failed"
+            });
+            return actions; // Skip irrelevant outputs
+          }
+
+          // multicall match
           if (mid && output.id === mid) {
             if ("error" in output) {
               actions.push({
@@ -190,40 +216,66 @@ export class RPCCache {
             // biome-ignore lint/performance/noAccumulatingSpread: convenience
             return [...actions, ...multicallActions];
           }
+          // non multicall
           const key = requestedOthers[idx - (mck.length ? 1 : 0)];
           if (key === undefined) return actions;
           actions.push({ type: "set", key, value: output });
           return actions;
         }, []);
 
+        const setActions = actions.filter(
+          (action) => action.type === "set"
+        ) as ActionSet[];
+        const setErrors = actions.filter(
+          (action) => action.type === "error"
+        ) as ActionError[];
+        // error due to whole rpc error
+        if (setErrors.length) {
+          this._RPC._rotate();
+          return;
+        }
         const newCache = Object.fromEntries(
-          actions
-            .filter((action) => action.type === "set")
-            .map(({ key, value }) => {
-              if (isErrorResult(value) || value?.result === null) {
-                const err = value?.error;
-                rpcOptions.RPCOptions.dev &&
-                  console.log("error=", { key, err });
+          setActions.map(({ key, value }) => {
+            if (isErrorResult(value) || value?.result === null) {
+              // we rotate rpc and retry on a set of errors
+              const err = "error" in value && value.error;
+              if (retryCodes.includes(err.code)) {
+                this._retry.set(key, 1);
+                this._RPC._rotate();
               }
-              // Resolve all promises, notifications.
-              const pr = this._promises.get(key);
-              //  If there are promises, resolve them and delete them.
-              if (pr) {
-                this._promises.delete(key);
-                for (const p of pr) p(value);
-              }
-              // Update the cell itself that must exist by calling `cell` before.
-              const cell = (prev?.[key] ||
-                cacheQueue.get(key)) as ValueCell<unknown>;
-              if (!cell) throw new Error(`unknown key: ${key}`);
-              // if validity => update expiry with now + validity
-              // or if the query is retry-able, we set a new expiry to be
-              // picked up by the loop.
-              if (
-                this._validity.has(key) ||
-                (this._retry.has(key) &&
-                  (isErrorResult(value) || value?.result === null))
-              ) {
+              // console.log("error=", { key, err });
+            }
+            // Resolve all promises, notifications.
+            const pr = this._promises.get(key);
+            //  If there are promises, resolve them and delete them.
+            if (pr) {
+              this._promises.delete(key);
+              for (const p of pr) p(value);
+            }
+            // Update the cell itself that must exist by calling `cell` before.
+            const cell = (prev?.[key] ||
+              cacheQueue.get(key)) as ValueCell<unknown>;
+            if (!cell) throw new Error(`unknown key: ${key}`);
+
+            // if the query is retry-able, we set a new expiry to be
+            // picked up by the loop.
+            if (
+              this._retry.has(key) &&
+              (isErrorResult(value) || value?.result === null)
+            ) {
+              updateExpiry.push([
+                key,
+                nowPlus(
+                  options.now,
+                  this._validity.has(key)
+                    ? this._validity.get(key)
+                    : this._retry.get(key)
+                )
+              ]);
+            } else {
+              // if validity => update expiry with now + validity to
+              // be picked up by the loop
+              if (this._validity.has(key)) {
                 updateExpiry.push([
                   key,
                   nowPlus(
@@ -233,12 +285,15 @@ export class RPCCache {
                       : this._retry.get(key)
                   )
                 ]);
-              } else this._retry.delete(key);
+              }
 
+              this._retry.delete(key);
               cell.set(value);
-              this._remove(key);
-              return [key, cell];
-            })
+            }
+
+            this._remove(key);
+            return [key, cell];
+          })
         );
 
         const updateExpiryResolved = Object.fromEntries(
@@ -249,7 +304,7 @@ export class RPCCache {
         );
 
         // update expiries after work and before new tick to prevent cancellation
-        proxy._sheet.queue(this._expiry, { ...exp, ...updateExpiryResolved });
+        proxy._sheet.queue(this._expiry, { ...updateExpiryResolved });
 
         return {
           ...(prev || ({} as Cache)),
@@ -303,7 +358,8 @@ export class RPCCache {
     rpcOpts.RPCOptions.dev && console.log({ cache: "rpc", key, newCell: q });
     // add map of query key and query
     this._queries.set(key, q);
-    const cell = this._proxy.new(pr, `rpc:${q.method}`) as ValueCell<
+    // we probably want to be undefined first instead of null until its resolved
+    const cell = this._proxy.new(undefined, `rpc:${q.method}`) as ValueCell<
       CacheValue<RawRPCQuery>
     >;
     this._cacheQueue.update((_c) => {

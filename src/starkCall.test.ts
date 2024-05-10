@@ -220,77 +220,86 @@ const erc20AbiStarknet = [
   }
 ];
 
-test("starkCall", async () => {
-  const sheet = new Sheet();
-  const proxy = new SheetProxy(sheet);
-  const multi = new MultiChainRPC(proxy);
-  const local = new LocalRPCSubscriber(proxy, multi);
+test(
+  "starkCall",
+  async () => {
+    const sheet = new Sheet();
+    const proxy = new SheetProxy(sheet);
+    const multi = new MultiChainRPC(proxy);
+    const local = new LocalRPCSubscriber(proxy, multi);
 
-  const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
-    chain: "starknet",
-    addr: new Address(
-      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-      StarkNet
-    ),
-    ty: "c"
-  });
-  const bal = local.call(
-    ethERC20Address,
-    proxy.new(erc20AbiStarknet),
-    proxy.new("balanceOf"),
-    proxy.new([
-      proxy.new(
-        "0x0249331A8fA19D1B507fc1aB9DD3eBE1E795A0095333657cecCF572ac774B211"
-      )
-    ])
-  );
+    const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
+      chain: "starknet",
+      addr: new Address(
+        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        StarkNet
+      ),
+      ty: "c"
+    });
+    const bal = local.call(
+      ethERC20Address,
+      proxy.new(erc20AbiStarknet),
+      proxy.new("balanceOf"),
+      proxy.new([
+        proxy.new(
+          "0x0249331A8fA19D1B507fc1aB9DD3eBE1E795A0095333657cecCF572ac774B211"
+        )
+      ])
+    );
+    // await sleep(4000);
 
-  const res = (await uncellify(bal)) as unknown as bigint[];
-  expect(res).toHaveLength(1);
-  expect(res[0]).toBeGreaterThanOrEqual(0n);
-});
+    const res = (await uncellify(bal)) as unknown as bigint[];
+    expect(res).toHaveLength(1);
+    expect(res[0]).toBeGreaterThanOrEqual(0n);
+  },
+  { timeout: 15000 }
+);
 
-test("starknet multicall", async () => {
-  const sheet = new Sheet();
-  const proxy = new SheetProxy(sheet);
-  const multi = new MultiChainRPC(proxy);
-  const local = new LocalRPCSubscriber(proxy, multi);
+test(
+  "starknet multicall",
+  async () => {
+    const sheet = new Sheet();
+    const proxy = new SheetProxy(sheet);
+    const multi = new MultiChainRPC(proxy);
+    const local = new LocalRPCSubscriber(proxy, multi);
 
-  const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
-    chain: "starknet",
-    addr: new Address(
-      "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-      StarkNet
-    ),
-    ty: "c"
-  });
-  const bal1 = starkCall(
-    local,
-    ethERC20Address,
-    proxy.new(erc20AbiStarknet),
-    proxy.new("symbol"),
-    proxy.new([])
-  );
-  const bal2 = starkCall(
-    local,
-    ethERC20Address,
-    proxy.new(erc20AbiStarknet),
-    proxy.new("balanceOf"),
-    proxy.new([
-      proxy.new(
-        "0x0148d0d9f75b52e914877aa9c325e648dd9d535af0097fc3caedf80fdee486ca"
-      )
-    ])
-  );
-  expect(await multi._counter("starknet")).toBe(0);
+    const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
+      chain: "starknet",
+      addr: new Address(
+        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        StarkNet
+      ),
+      ty: "c"
+    });
+    const bal1 = starkCall(
+      local,
+      ethERC20Address,
+      proxy.new(erc20AbiStarknet),
+      proxy.new("symbol"),
+      proxy.new([])
+    );
+    const bal2 = starkCall(
+      local,
+      ethERC20Address,
+      proxy.new(erc20AbiStarknet),
+      proxy.new("balanceOf"),
+      proxy.new([
+        proxy.new(
+          "0x0148d0d9f75b52e914877aa9c325e648dd9d535af0097fc3caedf80fdee486ca"
+        )
+      ])
+    );
+    expect(await multi._counter("starknet")).toBe(0);
 
-  await proxy.working.wait();
+    await proxy.working.wait();
 
-  // at least one call (there may be retries due to RPC errors/quotas/etc.)
-  // @todo count retries and expect `.toBe(1+retries)`
-  expect(await multi._counter("starknet")).toBeGreaterThanOrEqual(1);
+    // at least one call (there may be retries due to RPC errors/quotas/etc.)
+    // @todo count retries and expect `.toBe(1+retries)`
+    expect(await multi._counter("starknet")).toBeGreaterThanOrEqual(1);
 
-  const res1 = await uncellify(bal1);
-  expect(decodeShortString(toHex(res1[0]))).toEqual("ETH");
-  expect((await uncellify(bal2))[0]).toBeGreaterThanOrEqual(0n);
-});
+    const res1 = await uncellify(bal1);
+    expect(decodeShortString(toHex(res1[0]))).toEqual("ETH");
+    expect((await uncellify(bal2))[0]).toBeGreaterThanOrEqual(0n);
+  },
+  { timeout: 10000 }
+);

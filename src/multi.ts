@@ -16,6 +16,7 @@ export type MultiChainRPCOptions = {
   convertFromNative: (v: unknown) => unknown;
   loopDelay: number; // in ms
   dev: boolean;
+  rateLimit: number; // in ms
 };
 
 export class MultiChainRPC {

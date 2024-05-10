@@ -114,7 +114,7 @@ test(
 
     expect(bal1.value).toBeUndefined();
     expect(cache._counter).toBe(0);
-    await sleep(1500);
+    await sleep(2000);
     expect(cache._counter).toBe(1);
     expect(bal1?.value).toHaveProperty("result");
     await sleep(1200);
@@ -123,5 +123,5 @@ test(
     expect(cache._counter).toBe(2);
     expect(bal1?.value).toHaveProperty("result");
   },
-  { timeout: 7000 }
+  { timeout: 8000 }
 );

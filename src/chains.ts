@@ -17,7 +17,7 @@ export const polygon: Chain = {
   name: "Polygon",
   net: "evm",
   numid: 137n,
-  rpc: ["https://polygon.drpc.org	", "https://1rpc.io/matic	"]
+  rpc: ["https://polygon.drpc.org	", "https://1rpc.io/matic"]
 };
 
 export const sepolia: Chain = {
@@ -27,7 +27,7 @@ export const sepolia: Chain = {
   name: "Ethereum Sepolia Testnet",
   net: "evm",
   numid: 11155111n,
-  rpc: ["https://rpc.sepolia.org", "https://1rpc.io/sepolia", ""],
+  rpc: ["https://1rpc.io/sepolia", "https://rpc.sepolia.org"],
   test: true
 };
 
@@ -39,8 +39,8 @@ export const mumbai: Chain = {
   net: "evm",
   numid: 80001n,
   rpc: [
-    "https://rpc.ankr.com/polygon_mumbai",
-    "https://polygon-mumbai-pokt.nodies.app"
+    "https://polygon-mumbai.gateway.tenderly.co",
+    "https://polygon-testnet.public.blastapi.io"
   ],
   test: true
 };

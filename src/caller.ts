@@ -27,6 +27,10 @@ export class RPC {
   _current: number;
   protected _count: number;
 
+  /** rate limiting */
+  _last: number; // in ms
+  _rateLimit: number; // in ms
+
   constructor(chain: ChainType, options: RPCOptions) {
     const endpoints = options.chains.map((_chains) => {
       const rpc = _chains[chain]?.rpc;
@@ -35,6 +39,8 @@ export class RPC {
     }, "RPC.endpoint");
     this._chain = chain;
     this._options = chainOptions(options, chain);
+    this._rateLimit = options?.rateLimit || 2000;
+    this._last = 0;
     this._endpoints = endpoints;
     this._current = 0;
     this._count = 0;
@@ -99,7 +105,9 @@ export class RPC {
     getter: Map<RPCQueryKey, RawRPCQuery>,
     options: ChainRPCOptions
   ): [RawRPCQuery[], RPCQueryKey[]] => {
-    if (!options.multiCall) return [keys.map((key) => getter.get(key)), []];
+    // skip multicall if only one query
+    if (!options.multiCall || keys.length === 1)
+      return [keys.map((key) => getter.get(key)), []];
     // split the calls, other RPC queries and list of call keys
     const { calls, others, mck } = keys.reduce(
       (result, key) => {
@@ -146,7 +154,13 @@ export class RPC {
       // this._rotate();
       const endpoints = await this._endpoints.get();
       if (endpoints instanceof Error) throw endpoints;
+      const now = Date.now();
+      if (now - this._last < this._rateLimit) return;
+
+      this._last = now;
+      // console.log("Calling URL=", { url: endpoints[this._current] });
       const response = await fetch(endpoints[this._current], req);
+
       if (!response.ok) {
         if (await this._rotate()?.get()) {
           // @todo no need to rebuild the request
@@ -154,7 +168,8 @@ export class RPC {
         }
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      return response.json();
+      const result = await response.json();
+      return result?.length ? result : [result];
     } catch (error) {
       if (await this._rotate()?.get()) {
         // @todo no need to rebuild the request
