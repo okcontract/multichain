@@ -1,5 +1,6 @@
 import type { Log, RpcTransactionReceipt, TransactionRequest } from "viem";
 
+import type { Address } from "./address";
 import type { CallQueryType, CallResult } from "./ethCall";
 import type { Network } from "./network";
 import type { StarkCallQueryType, StarkCallResult } from "./starkCall";
@@ -12,6 +13,8 @@ export type ChainType = string;
  * OKcontract Chain definition.
  */
 export interface Chain {
+  /** Submitter Address */
+  from: Address;
   /** OKcontract ID (without prefix) */
   id: ChainType;
   /** display name */
