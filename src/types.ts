@@ -14,7 +14,7 @@ export type ChainType = string;
  */
 export interface Chain {
   /** Submitter Address */
-  from: Address;
+  from?: Address;
   /** OKcontract ID (without prefix) */
   id: ChainType;
   /** display name */
