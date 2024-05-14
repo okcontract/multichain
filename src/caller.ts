@@ -47,13 +47,13 @@ export class RPC {
   }
 
   // @todo also measure delays
-  _rotate(): AnyCell<boolean> {
-    return this._endpoints.map((_endpoints) => {
-      if (_endpoints.length < 2) return false;
-      this._current =
-        this._current === _endpoints.length - 1 ? 0 : this._current + 1;
-      return true;
-    }, "RPC._rotate");
+  async _rotate(): Promise<boolean> {
+    const endpoints = await this._endpoints.get();
+    if (endpoints instanceof Error) return false;
+    if (endpoints.length < 2) return false;
+    this._current =
+      this._current === endpoints.length - 1 ? 0 : this._current + 1;
+    return true;
   }
 
   /**
@@ -162,7 +162,7 @@ export class RPC {
       const response = await fetch(endpoints[this._current], req);
 
       if (!response.ok) {
-        if (await this._rotate()?.get()) {
+        if (await this._rotate()) {
           // @todo no need to rebuild the request
           return this.call(input);
         }
@@ -171,7 +171,7 @@ export class RPC {
       const result = await response.json();
       return result?.length ? result : [result];
     } catch (error) {
-      if (await this._rotate()?.get()) {
+      if (await this._rotate()) {
         // @todo no need to rebuild the request
         return this.call(input);
       }
