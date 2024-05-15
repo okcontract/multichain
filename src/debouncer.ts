@@ -1,5 +1,7 @@
 import type { ValueCell } from "@okcontract/cells";
 
+export type Debouncer = <T>(cb: (v: T) => void | Promise<void>, v: T) => void;
+
 /**
  * debouncer creates a debounce function that will execute a callback after a _delay_.
  *
@@ -12,7 +14,7 @@ import type { ValueCell } from "@okcontract/cells";
 export const debouncer = (
   delay = 750,
   working: ValueCell<boolean> | undefined = undefined
-) => {
+): Debouncer => {
   // console.log({ setting: delay });
   let timer: ReturnType<typeof setTimeout>;
   return <T>(cb: (v: T) => void | Promise<void>, v: T) => {

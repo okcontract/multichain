@@ -55,7 +55,7 @@ export type {
 // Utilities
 
 export { balanceOf, nativeBalance } from "./balance";
-export { debouncer } from "./debouncer";
+export { debouncer, type Debouncer } from "./debouncer";
 export {
   ethCall,
   ethCallQuery,
@@ -71,8 +71,8 @@ export {
   BalanceQuery,
   EstimateGasQuery,
   RawRPCQueryForHash,
-  isRPCQuery,
-  TransactionReceiptQuery
+  TransactionReceiptQuery,
+  isRPCQuery
 } from "./query";
 export { starkCall } from "./starkCall";
 export { chainToViem } from "./viem";
