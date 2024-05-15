@@ -1,7 +1,8 @@
 import {
   type AnyCell,
   type SheetProxy,
-  jsonStringify
+  jsonStringify,
+  sleep
 } from "@okcontract/cells";
 
 import type { Address } from "./address";
@@ -54,6 +55,8 @@ export class RPC {
     if (endpoints.length < 2) return false;
     this._current =
       this._current === endpoints.length - 1 ? 0 : this._current + 1;
+    // Sleep on cycle to prevent infinite loops until limits are hit.
+    if (this._current === 0) await sleep(100);
     return true;
   }
 
@@ -157,9 +160,10 @@ export class RPC {
       if (endpoints instanceof Error) throw endpoints;
       // @todo _current should be a key and we should find the position
       const endpoint = endpoints[this._current];
-      const limit = this._limiter.take(endpoint);
-      // @todo and it's dropped?
-      if (!limit) return;
+      if (!this._limiter.take(endpoint)) {
+        await this._rotate();
+        return this.call(input);
+      }
 
       const response = await fetch(endpoint, req);
       if (!response.ok) {
