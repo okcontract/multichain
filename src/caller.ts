@@ -1,9 +1,13 @@
-import { type AnyCell, jsonStringify } from "@okcontract/cells";
+import {
+  type AnyCell,
   type SheetProxy,
+  jsonStringify
+} from "@okcontract/cells";
 
 import type { Address } from "./address";
 import { EthCall, multiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
+import { RateLimiter } from "./limiter";
 import { type EVMType, StarkNet, type StarkNetType } from "./network";
 import { type ChainRPCOptions, type RPCOptions, chainOptions } from "./options";
 import { StarkCall, starkMulticall } from "./starkCall";
@@ -27,10 +31,7 @@ export class RPC {
   readonly _endpoints: AnyCell<string[]>;
   _current: number;
   protected _count: number;
-
-  /** rate limiting */
-  _last: number; // in ms
-  _rateLimit: number; // in ms
+  protected _limiter: RateLimiter;
 
   constructor(proxy: SheetProxy, chain: ChainType, options: RPCOptions) {
     const endpoints = options.chains.map((_chains) => {
@@ -40,8 +41,7 @@ export class RPC {
     }, "RPC.endpoint");
     this._chain = chain;
     this._options = chainOptions(options, chain);
-    this._rateLimit = options?.rateLimit || 2000;
-    this._last = 0;
+    this._limiter = new RateLimiter(endpoints, options?.rateLimit || 2000);
     this._endpoints = endpoints;
     this._current = 0;
     this._count = 0;
@@ -155,13 +155,13 @@ export class RPC {
       // this._rotate();
       const endpoints = await this._endpoints.get();
       if (endpoints instanceof Error) throw endpoints;
-      const now = Date.now();
-      if (now - this._last < this._rateLimit) return;
+      // @todo _current should be a key and we should find the position
+      const endpoint = endpoints[this._current];
+      const limit = this._limiter.take(endpoint);
+      // @todo and it's dropped?
+      if (!limit) return;
 
-      this._last = now;
-      // console.log("Calling URL=", { url: endpoints[this._current] });
-      const response = await fetch(endpoints[this._current], req);
-
+      const response = await fetch(endpoint, req);
       if (!response.ok) {
         if (await this._rotate()) {
           // @todo no need to rebuild the request
