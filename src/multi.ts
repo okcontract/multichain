@@ -43,7 +43,7 @@ export class MultiChainRPC {
       const options = await this._options.get();
 
       //... build option for chain without cells
-      const rpc = new RPC(chain, options);
+      const rpc = new RPC(this._proxy, chain, options);
       cache = new RPCCache(this._proxy, rpc, options);
       this._aggregators[chain] = cache;
     }

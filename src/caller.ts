@@ -1,4 +1,5 @@
 import { type AnyCell, jsonStringify } from "@okcontract/cells";
+  type SheetProxy,
 
 import type { Address } from "./address";
 import { EthCall, multiCall } from "./ethCall";
@@ -31,7 +32,7 @@ export class RPC {
   _last: number; // in ms
   _rateLimit: number; // in ms
 
-  constructor(chain: ChainType, options: RPCOptions) {
+  constructor(proxy: SheetProxy, chain: ChainType, options: RPCOptions) {
     const endpoints = options.chains.map((_chains) => {
       const rpc = _chains[chain]?.rpc;
       if (!rpc) throw new Error(`unknown chain: ${chain}`);

@@ -33,7 +33,7 @@ test("reuse a RPC value", async () => {
     ...defaultRPCOptions(proxy),
     chains: proxy.new({ polygon }, "polygon")
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
   const cache = new RPCCache(proxy, rpc, options);
 
   const balQ1 = BalanceQuery(
@@ -66,7 +66,7 @@ test("get multiple RPC values", async () => {
     ...defaultRPCOptions(proxy),
     chains: proxy.new({ polygon })
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
   const cache = new RPCCache(proxy, rpc, options);
 
   const balQ1 = BalanceQuery(
@@ -102,7 +102,7 @@ test(
       chains: proxy.new({ polygon }),
       loopDelay: 1000
     };
-    const rpc = new RPC("polygon", options);
+    const rpc = new RPC(proxy, "polygon", options);
     const cache = new RPCCache(proxy, rpc, options);
 
     const balQ1 = BalanceQuery(
