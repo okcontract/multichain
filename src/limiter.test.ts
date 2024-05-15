@@ -8,7 +8,7 @@ test("RateLimiter", async () => {
   const sheet = new Sheet();
   const proxy = new SheetProxy(sheet);
   const endpoints = proxy.new(["a", "b"], "endpoints");
-  const limiter = new RateLimiter(endpoints, 50);
+  const limiter = new RateLimiter(50);
   expect(limiter.take("a")).toBe(true);
   expect(limiter.take("a")).toBe(false);
   expect(limiter.take("b")).toBe(true);

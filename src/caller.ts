@@ -41,7 +41,7 @@ export class RPC {
     }, "RPC.endpoint");
     this._chain = chain;
     this._options = chainOptions(options, chain);
-    this._limiter = new RateLimiter(endpoints, options?.rateLimit || 2000);
+    this._limiter = new RateLimiter(options?.rateLimit || 2000);
     this._endpoints = endpoints;
     this._current = 0;
     this._count = 0;
