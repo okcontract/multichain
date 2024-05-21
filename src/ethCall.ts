@@ -1,17 +1,17 @@
 import {
-  type Abi,
   decodeFunctionResult,
   encodeFunctionData,
-  getAbiItem
+  getAbiItem,
+  type Abi
 } from "viem";
 
 import {
-  type AnyCell,
-  type MapCell,
-  type SheetProxy,
   cellify,
   collector,
-  uncellify
+  uncellify,
+  type AnyCell,
+  type MapCell,
+  type SheetProxy
 } from "@okcontract/cells";
 
 import type { Address, EVMAddress } from "./address";
@@ -20,11 +20,11 @@ import { mapArrayRec } from "./mapArrayRec";
 import { CallQuery } from "./query";
 import type { ChainType } from "./types";
 import {
+  latestBlock,
   type RPCErrorResult,
   type RPCQuery,
   type RPCResult,
-  type RawRPCQuery,
-  latestBlock
+  type RawRPCQuery
 } from "./types";
 
 export const EthCall = "eth_call" as const;
@@ -57,18 +57,24 @@ export const ethCallQuery = <T extends unknown[]>(
           ? // @ts-expect-error Type instantiation is excessively deep and possibly infinite.
             getAbiItem({ abi, name: functionName, args: args || [] })
           : null;
-
       // @fixme hack should already be uncellified
       const uncArgs = await uncellify(args);
-      return abiItem && args && "inputs" in abiItem
-        ? abiItem?.inputs?.length === uncArgs?.length &&
-            encodeFunctionData({
-              abi,
-              functionName,
-              // biome-ignore lint: lint/suspicious/noExplicitAny
-              args: (uncArgs || []) as any[]
-            })
-        : null;
+      try {
+        const encoded =
+          abiItem && args && "inputs" in abiItem
+            ? abiItem?.inputs?.length === uncArgs?.length &&
+              encodeFunctionData({
+                abi,
+                functionName,
+                // biome-ignore lint: lint/suspicious/noExplicitAny
+                args: (uncArgs || []) as any[]
+              })
+            : null;
+        return encoded;
+      } catch (error) {
+        console.log({ error });
+        return null;
+      }
     },
     `ethCall.ethCallQuery.data:${functionName.value}`
   );
