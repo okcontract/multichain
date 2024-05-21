@@ -1,17 +1,17 @@
 import {
+  type Abi,
   decodeFunctionResult,
   encodeFunctionData,
-  getAbiItem,
-  type Abi
+  getAbiItem
 } from "viem";
 
 import {
-  cellify,
-  collector,
-  uncellify,
   type AnyCell,
   type MapCell,
-  type SheetProxy
+  type SheetProxy,
+  cellify,
+  collector,
+  uncellify
 } from "@okcontract/cells";
 
 import type { Address, EVMAddress } from "./address";
@@ -20,11 +20,11 @@ import { mapArrayRec } from "./mapArrayRec";
 import { CallQuery } from "./query";
 import type { ChainType } from "./types";
 import {
-  latestBlock,
   type RPCErrorResult,
   type RPCQuery,
   type RPCResult,
-  type RawRPCQuery
+  type RawRPCQuery,
+  latestBlock
 } from "./types";
 
 export const EthCall = "eth_call" as const;
