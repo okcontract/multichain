@@ -1,17 +1,17 @@
 import {
-  type Abi,
   decodeFunctionResult,
   encodeFunctionData,
-  getAbiItem
+  getAbiItem,
+  type Abi
 } from "viem";
 
 import {
-  type AnyCell,
-  type MapCell,
-  type SheetProxy,
   cellify,
   collector,
-  uncellify
+  uncellify,
+  type AnyCell,
+  type MapCell,
+  type SheetProxy
 } from "@okcontract/cells";
 
 import type { Address, EVMAddress } from "./address";
@@ -20,11 +20,11 @@ import { mapArrayRec } from "./mapArrayRec";
 import { CallQuery } from "./query";
 import type { ChainType } from "./types";
 import {
+  latestBlock,
   type RPCErrorResult,
   type RPCQuery,
   type RPCResult,
-  type RawRPCQuery,
-  latestBlock
+  type RawRPCQuery
 } from "./types";
 
 export const EthCall = "eth_call" as const;
@@ -60,6 +60,7 @@ export const ethCallQuery = <T extends unknown[]>(
 
       // @fixme hack should already be uncellified
       const uncArgs = await uncellify(args);
+
       return abiItem && args && "inputs" in abiItem
         ? abiItem?.inputs?.length === uncArgs?.length &&
             encodeFunctionData({
@@ -115,7 +116,8 @@ export const ethCall = <T extends unknown | unknown[]>(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
       try {
-        if (!_cell || "error" in _cell || !_cell?.result) return null;
+        if (_cell && "error" in _cell) throw new Error(_cell.error.message);
+        if (!_cell || !_cell?.result) return null;
         const decoded = decodeFunctionResult({
           abi,
           functionName: _functionName,
@@ -124,7 +126,7 @@ export const ethCall = <T extends unknown | unknown[]>(
 
         const converted = opts.convertFromNative(decoded);
         // @todo reactive cellify
-        return cellify(proxy, converted);
+        return coll(cellify(proxy, converted));
       } catch (error) {
         // console.log({ error });
         // console.log("decodeFunctionResult-Error", {

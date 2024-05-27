@@ -1,16 +1,16 @@
-import { type AnyCell, jsonStringify } from "@okcontract/cells";
+import { jsonStringify, type AnyCell } from "@okcontract/cells";
 
 import type { Address } from "./address";
 import { EthCall, multiCall } from "./ethCall";
-import { type RPCQueryKey, computeHash } from "./hash";
-import { type EVMType, StarkNet, type StarkNetType } from "./network";
-import { type ChainRPCOptions, type RPCOptions, chainOptions } from "./options";
+import { computeHash, type RPCQueryKey } from "./hash";
+import { StarkNet, type EVMType, type StarkNetType } from "./network";
+import { chainOptions, type ChainRPCOptions, type RPCOptions } from "./options";
 import { StarkCall, starkMulticall } from "./starkCall";
 import {
+  RPCVersion,
   type ChainType,
   type RPCCaller,
   type RPCQuery,
-  RPCVersion,
   type RawRPCQuery
 } from "./types";
 
