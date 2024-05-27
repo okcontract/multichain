@@ -1,17 +1,17 @@
 import {
-  type MapCell,
-  type SheetProxy,
-  type ValueCell,
   WrappedCell,
   clock,
-  clockWork
+  clockWork,
+  type MapCell,
+  type SheetProxy,
+  type ValueCell
 } from "@okcontract/cells";
 
 import type { RPC } from "./caller";
 import { isErrorResult } from "./error";
 import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
-import { type RPCQueryKey, computeHash } from "./hash";
+import { computeHash, type RPCQueryKey } from "./hash";
 import type { ChainRPCOptions, RPCOptions } from "./options";
 import { decodeStarkMultiCall } from "./starkCall";
 import type {
@@ -235,7 +235,7 @@ export class RPCCache {
           return;
         }
         const newCache = Object.fromEntries(
-          setActions.map(({ key, value }) => {
+          setActions.reduce((acc, { key, value }) => {
             if (isErrorResult(value) || value?.result === null) {
               // we rotate rpc and retry on a set of errors
               const err = "error" in value && value.error;
@@ -243,7 +243,6 @@ export class RPCCache {
                 this._retry.set(key, 1);
                 this._RPC._rotate();
               }
-              // console.log("error=", { key, err });
             }
             // Resolve all promises, notifications.
             const pr = this._promises.get(key);
@@ -255,8 +254,7 @@ export class RPCCache {
             // Update the cell itself that must exist by calling `cell` before.
             const cell = (prev?.[key] ||
               cacheQueue.get(key)) as ValueCell<unknown>;
-            if (!cell) throw new Error(`unknown key: ${key}`);
-
+            if (!cell) return acc;
             // if the query is retry-able, we set a new expiry to be
             // picked up by the loop.
             if (
@@ -292,8 +290,9 @@ export class RPCCache {
             }
 
             this._remove(key);
-            return [key, cell];
-          })
+            acc.push([key, cell]);
+            return acc;
+          }, [])
         );
 
         const updateExpiryResolved = Object.fromEntries(
