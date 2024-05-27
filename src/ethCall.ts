@@ -116,7 +116,7 @@ export const ethCall = <T extends unknown | unknown[]>(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
       try {
-        if (!opts.noFail && _cell && "error" in _cell)
+        if (!opts?.noFail && _cell && "error" in _cell)
           throw new Error(_cell.error.message);
         if (!_cell || !_cell?.result) return null;
         const decoded = decodeFunctionResult({
