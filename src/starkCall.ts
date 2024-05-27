@@ -207,7 +207,9 @@ export const starkCall = <
             _addr.addr,
             _method,
             _callData,
-            await uncellify(converted),
+            await uncellify(converted, {
+              getter: (cell) => cell.value
+            }),
             _options
           )
         ] as [string, StarkCallQueryType]
