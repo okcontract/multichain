@@ -112,32 +112,21 @@ export const ethCall = <T extends unknown | unknown[]>(
       ? `${opts?.name}.${functionName.id}`
       : `encodeCall.cell:${functionName.id}`
   });
-  const coll = collector(proxy);
+  const coll = collector<MapCell<Cellified<unknown>, false>>(proxy);
   return proxy.map(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
-      try {
-        if (!opts?.noFail && _cell && "error" in _cell)
-          throw new Error(_cell.error.message);
-        if (!_cell || !_cell?.result) return null;
-        const decoded = decodeFunctionResult({
-          abi,
-          functionName: _functionName,
-          data: _cell.result as `0x${string}`
-        }) as NonNullable<T>;
-
-        const converted = opts.convertFromNative(decoded);
-        // @todo reactive cellify
-        return coll(cellify(proxy, converted));
-      } catch (error) {
-        // console.log({ error });
-        // console.log("decodeFunctionResult-Error", {
-        //   error,
-        //   _functionName,
-        //   query
-        // });
-        return error;
-      }
+      if (!opts?.noFail && _cell && "error" in _cell)
+        throw new Error(_cell.error.message);
+      if (!_cell || !("result" in _cell)) return null;
+      const decoded = decodeFunctionResult({
+        abi,
+        functionName: _functionName,
+        data: _cell.result as `0x${string}`
+      }) as NonNullable<T>;
+      const converted = opts.convertFromNative(decoded);
+      // @todo reactive cellify
+      return coll(cellify(proxy, converted));
     },
     `ethCall.encodeCall:${functionName.value}`
   );
