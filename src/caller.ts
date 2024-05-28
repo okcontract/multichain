@@ -1,8 +1,14 @@
-import { type AnyCell, jsonStringify } from "@okcontract/cells";
+import {
+  type AnyCell,
+  type SheetProxy,
+  jsonStringify,
+  sleep
+} from "@okcontract/cells";
 
 import type { Address } from "./address";
 import { EthCall, multiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
+import { RateLimiter } from "./limiter";
 import { type EVMType, StarkNet, type StarkNetType } from "./network";
 import { type ChainRPCOptions, type RPCOptions, chainOptions } from "./options";
 import { StarkCall, starkMulticall } from "./starkCall";
@@ -26,12 +32,9 @@ export class RPC {
   readonly _endpoints: AnyCell<string[]>;
   _current: number;
   protected _count: number;
+  protected _limiter: RateLimiter;
 
-  /** rate limiting */
-  _last: number; // in ms
-  _rateLimit: number; // in ms
-
-  constructor(chain: ChainType, options: RPCOptions) {
+  constructor(proxy: SheetProxy, chain: ChainType, options: RPCOptions) {
     const endpoints = options.chains.map((_chains) => {
       const rpc = _chains[chain]?.rpc;
       if (!rpc) throw new Error(`unknown chain: ${chain}`);
@@ -39,21 +42,22 @@ export class RPC {
     }, "RPC.endpoint");
     this._chain = chain;
     this._options = chainOptions(options, chain);
-    this._rateLimit = options?.rateLimit || 2000;
-    this._last = 0;
+    this._limiter = new RateLimiter(options?.rateLimit || 2000);
     this._endpoints = endpoints;
     this._current = 0;
     this._count = 0;
   }
 
   // @todo also measure delays
-  _rotate(): AnyCell<boolean> {
-    return this._endpoints.map((_endpoints) => {
-      if (_endpoints.length < 2) return false;
-      this._current =
-        this._current === _endpoints.length - 1 ? 0 : this._current + 1;
-      return true;
-    }, "RPC._rotate");
+  async _rotate(): Promise<boolean> {
+    const endpoints = await this._endpoints.get();
+    if (endpoints instanceof Error) return false;
+    if (endpoints.length < 2) return false;
+    this._current =
+      this._current === endpoints.length - 1 ? 0 : this._current + 1;
+    // Sleep on cycle to prevent infinite loops until limits are hit.
+    if (this._current === 0) await sleep(100);
+    return true;
   }
 
   /**
@@ -154,15 +158,16 @@ export class RPC {
       // this._rotate();
       const endpoints = await this._endpoints.get();
       if (endpoints instanceof Error) throw endpoints;
-      const now = Date.now();
-      if (now - this._last < this._rateLimit) return;
+      // @todo _current should be a key and we should find the position
+      const endpoint = endpoints[this._current];
+      if (!this._limiter.take(endpoint)) {
+        await this._rotate();
+        return this.call(input);
+      }
 
-      this._last = now;
-      // console.log("Calling URL=", { url: endpoints[this._current] });
-      const response = await fetch(endpoints[this._current], req);
-
+      const response = await fetch(endpoint, req);
       if (!response.ok) {
-        if (await this._rotate()?.get()) {
+        if (await this._rotate()) {
           // @todo no need to rebuild the request
           return this.call(input);
         }
@@ -171,7 +176,7 @@ export class RPC {
       const result = await response.json();
       return result?.length ? result : [result];
     } catch (error) {
-      if (await this._rotate()?.get()) {
+      if (await this._rotate()) {
         // @todo no need to rebuild the request
         return this.call(input);
       }

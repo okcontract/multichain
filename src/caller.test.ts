@@ -36,7 +36,7 @@ test("caller single balance", async () => {
     ...defaultRPCOptions(proxy),
     chains: proxy.new({ polygon })
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
 
   const opts = await rpc._options?.get();
   if (opts instanceof Error) throw opts;
@@ -61,7 +61,7 @@ test("caller two balances", async () => {
     ...defaultRPCOptions(proxy),
     chains: proxy.new({ polygon })
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
   const opts = await rpc._options?.get();
   if (opts instanceof Error) throw opts;
 
@@ -93,7 +93,7 @@ test("rotate rpc on rpc error", async () => {
       polygon: { ...polygon, rpc: ["https://fakerpc.opl", ...polygon.rpc] }
     })
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
 
   const opts = await rpc._options?.get();
   if (opts instanceof Error) throw opts;
@@ -115,7 +115,7 @@ test("multicall", async () => {
     ...defaultRPCOptions(proxy),
     chains: proxy.new({ polygon })
   };
-  const rpc = new RPC("polygon", options);
+  const rpc = new RPC(proxy, "polygon", options);
   const opts = await rpc._options?.get();
   if (opts instanceof Error) throw opts;
 
