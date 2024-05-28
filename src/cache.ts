@@ -234,33 +234,47 @@ export class RPCCache {
           this._RPC._rotate();
           return;
         }
-        const newCache = Object.fromEntries(
-          setActions.reduce((acc, { key, value }) => {
-            if (isErrorResult(value) || value?.result === null) {
-              // we rotate rpc and retry on a set of errors
-              const err = "error" in value && value.error;
-              if (retryCodes.includes(err.code)) {
-                this._retry.set(key, 1);
-                this._RPC._rotate();
-              }
+        const newCache = setActions.reduce((acc, { key, value }) => {
+          if (isErrorResult(value) || value?.result === null) {
+            // we rotate rpc and retry on a set of errors
+            const err = "error" in value && value.error;
+            if (retryCodes.includes(err.code)) {
+              this._retry.set(key, 1);
+              this._RPC._rotate();
             }
-            // Resolve all promises, notifications.
-            const pr = this._promises.get(key);
-            //  If there are promises, resolve them and delete them.
-            if (pr) {
-              this._promises.delete(key);
-              for (const p of pr) p(value);
-            }
-            // Update the cell itself that must exist by calling `cell` before.
-            const cell = (prev?.[key] ||
-              cacheQueue.get(key)) as ValueCell<unknown>;
-            if (!cell) return acc;
-            // if the query is retry-able, we set a new expiry to be
-            // picked up by the loop.
-            if (
-              this._retry.has(key) &&
-              (isErrorResult(value) || value?.result === null)
-            ) {
+          }
+          // Resolve all promises, notifications.
+          const pr = this._promises.get(key);
+          //  If there are promises, resolve them and delete them.
+          if (pr) {
+            this._promises.delete(key);
+            for (const p of pr) p(value);
+          }
+          // Update the cell itself that must exist by calling `cell` before.
+          const cell = (prev?.[key] ||
+            cacheQueue.get(key)) as ValueCell<unknown>;
+          // The cell does not exist when it did not exist previously
+          // and there was an error before its creation in `cacheQueue`.
+          if (!cell) return acc;
+          // If the query is retry-able, we set a new expiry to be
+          // picked up by the loop.
+          if (
+            this._retry.has(key) &&
+            (isErrorResult(value) || value?.result === null)
+          ) {
+            updateExpiry.push([
+              key,
+              nowPlus(
+                options.now,
+                this._validity.has(key)
+                  ? this._validity.get(key)
+                  : this._retry.get(key)
+              )
+            ]);
+          } else {
+            // if validity => update expiry with now + validity to
+            // be picked up by the loop
+            if (this._validity.has(key)) {
               updateExpiry.push([
                 key,
                 nowPlus(
@@ -270,30 +284,14 @@ export class RPCCache {
                     : this._retry.get(key)
                 )
               ]);
-            } else {
-              // if validity => update expiry with now + validity to
-              // be picked up by the loop
-              if (this._validity.has(key)) {
-                updateExpiry.push([
-                  key,
-                  nowPlus(
-                    options.now,
-                    this._validity.has(key)
-                      ? this._validity.get(key)
-                      : this._retry.get(key)
-                  )
-                ]);
-              }
-
-              this._retry.delete(key);
-              cell.set(value);
             }
-
-            this._remove(key);
-            acc.push([key, cell]);
-            return acc;
-          }, [])
-        );
+            this._retry.delete(key);
+            cell.set(value);
+          }
+          this._remove(key);
+          acc[key] = cell;
+          return acc;
+        }, {});
 
         const updateExpiryResolved = Object.fromEntries(
           (await Promise.all(updateExpiry.map(([_, v]) => v))).map((v, i) => [
