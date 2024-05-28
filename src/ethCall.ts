@@ -7,6 +7,7 @@ import {
 
 import {
   type AnyCell,
+  type Cellified,
   type MapCell,
   type SheetProxy,
   cellify,
@@ -62,6 +63,7 @@ export const ethCallQuery = <T extends unknown[]>(
       const uncArgs = await uncellify(args, {
         getter: (cell) => cell.value
       });
+      
       return abiItem && args && "inputs" in abiItem
         ? abiItem?.inputs?.length === uncArgs?.length &&
             encodeFunctionData({
@@ -112,30 +114,21 @@ export const ethCall = <T extends unknown | unknown[]>(
       ? `${opts?.name}.${functionName.id}`
       : `encodeCall.cell:${functionName.id}`
   });
-  const coll = collector(proxy);
+  const coll = collector<Cellified<unknown>>(proxy);
   return proxy.map(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
-      try {
-        if (!_cell || "error" in _cell || !_cell?.result) return null;
-        const decoded = decodeFunctionResult({
-          abi,
-          functionName: _functionName,
-          data: _cell.result as `0x${string}`
-        }) as NonNullable<T>;
-
-        const converted = opts.convertFromNative(decoded);
-        // @todo reactive cellify
-        return cellify(proxy, converted);
-      } catch (error) {
-        // console.log({ error });
-        // console.log("decodeFunctionResult-Error", {
-        //   error,
-        //   _functionName,
-        //   query
-        // });
-        return error;
-      }
+      if (!opts?.noFail && _cell && "error" in _cell)
+        throw new Error(_cell.error.message);
+      if (!_cell || !("result" in _cell)) return null;
+      const decoded = decodeFunctionResult({
+        abi,
+        functionName: _functionName,
+        data: _cell.result as `0x${string}`
+      }) as NonNullable<T>;
+      const converted = opts.convertFromNative(decoded);
+      // @todo reactive cellify
+      return coll(cellify(proxy, converted));
     },
     `ethCall.encodeCall:${functionName.value}`
   );
@@ -177,7 +170,10 @@ export const encodeCall = <
       "encodeCall.converted"
     );
     const query = ethCallQuery(proxy, addr, abi, functionName, converted);
-    return ethCall(local, query, abi, functionName, _options);
+    return ethCall(local, query, abi, functionName, _options) as MapCell<
+      T | null,
+      false
+    >;
   }, "ethCall.encodeCall.cell");
 };
 
