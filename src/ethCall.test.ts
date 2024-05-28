@@ -136,8 +136,8 @@ test("query with bad response", async () => {
     proxy.new([])
   );
   expect(await multi._counter("sepolia")).toBe(0);
-  await sleep(2000);
-  expect(await res.consolidatedValue).toBeNull();
+  await expect(res.consolidatedValue).resolves.toBeInstanceOf(Error);
+  expect(res.consolidatedValue.message).toBe("execution reverted");
   expect(await multi._counter("sepolia")).toBe(1);
   local.destroy();
 });
