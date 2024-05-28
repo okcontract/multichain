@@ -57,10 +57,10 @@ test("call function", async () => {
     ])
   );
   expect(await multi._counter("sepolia")).toBe(0);
-  await sleep(1800);
 
-  expect(await bal1.consolidatedValue).toBeGreaterThan(1000000n);
-  expect(await bal2.consolidatedValue).toBeGreaterThan(1000000n);
+  await expect(bal1.consolidatedValue).resolves.toBeGreaterThan(1000000n);
+  // Resolves at the same time.
+  expect(bal2.consolidatedValue).toBeGreaterThan(1000000n);
 
   // @todo count retries
   expect(await multi._counter("sepolia")).toBeGreaterThanOrEqual(1);
@@ -136,8 +136,9 @@ test("query with bad response", async () => {
     proxy.new([])
   );
   expect(await multi._counter("sepolia")).toBe(0);
-  await sleep(2000);
-  expect(await res.consolidatedValue).toBeNull();
+  await expect(res.consolidatedValue).resolves.toBeInstanceOf(Error);
+  // @ts-expect-error: message is present
+  expect(res.consolidatedValue.message).toBe("execution reverted");
   expect(await multi._counter("sepolia")).toBe(1);
   local.destroy();
 });
@@ -179,7 +180,7 @@ test(
 
     local.destroy();
   },
-  { timeout: 80000 }
+  { timeout: 20000 }
 );
 
 test(
@@ -222,7 +223,7 @@ test(
     expect(await balance.consolidatedValue).toBeGreaterThan(1000000n);
     local.destroy();
   },
-  { timeout: 80000 }
+  { timeout: 30000 }
 );
 
 test("call function with null abi", async () => {

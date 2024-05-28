@@ -102,7 +102,7 @@ export type RPCQueryOptions = {
   name?: string;
   retry?: number;
   validity?: number;
-  failOnError?: boolean;
+  noFail?: boolean;
 } & RPCConvert;
 
 export type RPCConvert = {
