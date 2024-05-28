@@ -168,7 +168,7 @@ export class RPCCache {
           )
         ];
         if (!requested.length) return prev || null;
-        console.log({ cl, requested });
+        console.log({ cl: cl.value, requested });
 
         // Adding keys to set.
         this._cacheSet.update((s) => {
