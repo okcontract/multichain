@@ -60,8 +60,10 @@ export const ethCallQuery = <T extends unknown[]>(
           : null;
 
       // @fixme hack should already be uncellified
-      const uncArgs = await uncellify(args);
-
+      const uncArgs = await uncellify(args, {
+        getter: (cell) => cell.value
+      });
+      
       return abiItem && args && "inputs" in abiItem
         ? abiItem?.inputs?.length === uncArgs?.length &&
             encodeFunctionData({
