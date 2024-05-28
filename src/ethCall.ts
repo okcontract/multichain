@@ -112,7 +112,7 @@ export const ethCall = <T extends unknown | unknown[]>(
       ? `${opts?.name}.${functionName.id}`
       : `encodeCall.cell:${functionName.id}`
   });
-  const coll = collector<MapCell<Cellified<unknown>, false>>(proxy);
+  const coll = collector<Cellified<unknown>>(proxy);
   return proxy.map(
     [abi, cell, functionName],
     (abi, _cell, _functionName) => {
@@ -168,7 +168,10 @@ export const encodeCall = <
       "encodeCall.converted"
     );
     const query = ethCallQuery(proxy, addr, abi, functionName, converted);
-    return ethCall(local, query, abi, functionName, _options);
+    return ethCall(local, query, abi, functionName, _options) as MapCell<
+      T | null,
+      false
+    >;
   }, "ethCall.encodeCall.cell");
 };
 
