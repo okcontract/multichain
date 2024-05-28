@@ -1,17 +1,17 @@
 import {
-  WrappedCell,
-  clock,
-  clockWork,
   type MapCell,
   type SheetProxy,
-  type ValueCell
+  type ValueCell,
+  WrappedCell,
+  clock,
+  clockWork
 } from "@okcontract/cells";
 
 import type { RPC } from "./caller";
 import { isErrorResult } from "./error";
 import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
-import { computeHash, type RPCQueryKey } from "./hash";
+import { type RPCQueryKey, computeHash } from "./hash";
 import type { ChainRPCOptions, RPCOptions } from "./options";
 import { decodeStarkMultiCall } from "./starkCall";
 import type {
