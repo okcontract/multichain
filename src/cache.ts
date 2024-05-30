@@ -23,6 +23,12 @@ import type {
   RawRPCQuery
 } from "./types";
 
+/**
+ * nowPlus computes an expected time.
+ * @param now current time getter
+ * @param delta interval in **seconds**
+ * @todo `delta` in ms?
+ */
 export const nowPlus = async (
   now: () => number | Promise<number>,
   delta: number
@@ -142,7 +148,7 @@ export class RPCCache {
         rpcOptions: ChainRPCOptions,
         prev: Cache
       ) => {
-        const updateExpiry = [] as [string, Promise<number>][];
+        const updateExpiry = {} as Record<string, Promise<number>>;
         const now = await options.now();
         // expired queries
         const expired = Object.entries(exp)
@@ -162,6 +168,9 @@ export class RPCCache {
         const requested = [...new Set([...unavailable, ...expired])];
         if (!requested.length) return prev || null;
         console.log({ cl: cl.value, requested });
+        // @todo move to options
+        const timeout = nowPlus(options.now, 2);
+        for (const key of requested) updateExpiry[key] = timeout;
 
         const enumerated = requested?.length
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
@@ -263,28 +272,24 @@ export class RPCCache {
             this._retry.has(key) &&
             (isErrorResult(value) || value?.result === null)
           ) {
-            updateExpiry.push([
-              key,
-              nowPlus(
-                options.now,
-                this._validity.has(key)
-                  ? this._validity.get(key)
-                  : this._retry.get(key)
-              )
-            ]);
+            updateExpiry[key] = nowPlus(
+              options.now,
+              this._validity.has(key)
+                ? this._validity.get(key)
+                : this._retry.get(key)
+            );
           } else {
             // if validity => update expiry with now + validity to
             // be picked up by the loop
             if (this._validity.has(key)) {
-              updateExpiry.push([
-                key,
-                nowPlus(
-                  options.now,
-                  this._validity.has(key)
-                    ? this._validity.get(key)
-                    : this._retry.get(key)
-                )
-              ]);
+              updateExpiry[key] = nowPlus(
+                options.now,
+                this._validity.has(key)
+                  ? this._validity.get(key)
+                  : this._retry.get(key)
+              );
+            } else {
+              updateExpiry[key] = undefined;
             }
             this._retry.delete(key);
             cell.set(value);
@@ -294,15 +299,15 @@ export class RPCCache {
           return acc;
         }, {});
 
+        const entries = Object.entries(updateExpiry);
         const updateExpiryResolved = Object.fromEntries(
-          (await Promise.all(updateExpiry.map(([_, v]) => v))).map((v, i) => [
-            updateExpiry[i][0],
-            v
-          ])
+          (await Promise.all(entries.map(([_, v]) => v)))
+            .map((v, i) => [entries[i][0], v] as [string, number])
+            .filter(([_, v]) => v !== undefined)
         );
 
         // update expiries after work and before new tick to prevent cancellation
-        proxy._sheet.queue(this._expiry, { ...updateExpiryResolved });
+        proxy._sheet.queue(this._expiry, updateExpiryResolved);
 
         return {
           ...(prev || ({} as Cache)),
