@@ -1,6 +1,6 @@
 import { isAddress } from "viem";
 
-import type { AnyCell, SheetProxy } from "@okcontract/cells";
+import type { AnyCell, SheetProxy, ValueCell } from "@okcontract/cells";
 
 import { Address } from "./address";
 import {
@@ -11,26 +11,26 @@ import {
   sepolia,
   starknet
 } from "./chains";
-import type { MultiChainRPCOptions } from "./multi";
 import { EVM, type Network, StarkNet } from "./network";
 import type { Chain, ChainType } from "./types";
 
 // @todo type for convert
 export type Native = unknown;
 
-export type RPCOptions = {
+export type MultiChainRPCOptions = {
   now: () => number | Promise<number>;
-  chains: AnyCell<{ [key: ChainType]: Chain }>;
+  chains: ValueCell<{ [key: ChainType]: Chain }>;
   convertToNative: (v: unknown) => unknown;
   convertFromNative: (v: unknown) => unknown;
   loopDelay: number; // in ms
   dev: boolean;
-  rateLimit: number;
+  rateLimit: number; // in ms
+  timeOut: number; // in s @todo
 };
 
 export type ChainRPCOptions = {
   chain: ChainType;
-  RPCOptions: RPCOptions;
+  RPCOptions: MultiChainRPCOptions;
   multiCall?: Address<Network>;
 };
 
@@ -82,7 +82,8 @@ export const defaultRPCOptions = (proxy: SheetProxy): MultiChainRPCOptions => ({
   convertFromNative: convertFromNative,
   loopDelay: 200,
   dev: false,
-  rateLimit: 1000
+  rateLimit: 1000,
+  timeOut: 3
 });
 
 // cf. https://www.multicall3.com/
@@ -94,11 +95,12 @@ const starknetMulticall = new Address(
   "0x034ffb8f4452df7a613a0210824d6414dbadcddce6c6e19bf4ddc9e22ce5f970",
   StarkNet
 );
+
 /**
  * chainOptions generates the option for a given chain.
  */
 export const chainOptions = <T>(
-  RPCOptions: RPCOptions,
+  RPCOptions: MultiChainRPCOptions,
   chain: ChainType
 ): AnyCell<ChainRPCOptions> =>
   RPCOptions.chains.map((_chains) => {

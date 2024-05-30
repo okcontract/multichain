@@ -12,7 +12,7 @@ import { isErrorResult } from "./error";
 import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
-import type { ChainRPCOptions, RPCOptions } from "./options";
+import type { ChainRPCOptions, MultiChainRPCOptions } from "./options";
 import { decodeStarkMultiCall } from "./starkCall";
 import type {
   ChainType,
@@ -116,7 +116,7 @@ export class RPCCache {
   _convertToNative: (v: unknown) => unknown;
   _convertFromNative: (v: unknown) => unknown;
 
-  constructor(proxy: SheetProxy, rpc: RPC, options: RPCOptions) {
+  constructor(proxy: SheetProxy, rpc: RPC, options: MultiChainRPCOptions) {
     this._sub = proxy.new(new Map(), "RPCCache._sub");
     this._cacheQueue = proxy.new(new Map(), "RPCCache._cacheList");
 
@@ -168,9 +168,10 @@ export class RPCCache {
         const requested = [...new Set([...unavailable, ...expired])];
         if (!requested.length) return prev || null;
         console.log({ cl: cl.value, requested });
-        // @todo move to options
-        const timeout = nowPlus(options.now, 2);
-        for (const key of requested) updateExpiry[key] = timeout;
+        if (options?.timeOut) {
+          const timeout = nowPlus(options.now, options.timeOut);
+          for (const key of requested) updateExpiry[key] = timeout;
+        }
 
         const enumerated = requested?.length
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
@@ -420,7 +421,7 @@ export class RPCCache {
     now: number,
     expiry: Record<string, number>,
     cache: Cache,
-    options: RPCOptions
+    options: MultiChainRPCOptions
   ) {
     const v = cache?.[key];
     if (v === undefined) return false;

@@ -10,7 +10,11 @@ import { EthCall, multiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
 import { RateLimiter } from "./limiter";
 import { type EVMType, StarkNet, type StarkNetType } from "./network";
-import { type ChainRPCOptions, type RPCOptions, chainOptions } from "./options";
+import {
+  type ChainRPCOptions,
+  type MultiChainRPCOptions,
+  chainOptions
+} from "./options";
 import { StarkCall, starkMulticall } from "./starkCall";
 import {
   type ChainType,
@@ -34,7 +38,11 @@ export class RPC {
   protected _count: number;
   protected _limiter: RateLimiter;
 
-  constructor(proxy: SheetProxy, chain: ChainType, options: RPCOptions) {
+  constructor(
+    proxy: SheetProxy,
+    chain: ChainType,
+    options: MultiChainRPCOptions
+  ) {
     const endpoints = options.chains.map((_chains) => {
       const rpc = _chains[chain]?.rpc;
       if (!rpc) throw new Error(`unknown chain: ${chain}`);
