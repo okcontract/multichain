@@ -30,9 +30,8 @@ export type MultiChainRPCOptions = {
 
 export type ChainRPCOptions = {
   chain: ChainType;
-  RPCOptions: MultiChainRPCOptions;
   multiCall?: Address<Network>;
-};
+} & MultiChainRPCOptions;
 
 export type AddressRewrite =
   | bigint
@@ -100,10 +99,10 @@ const starknetMulticall = new Address(
  * chainOptions generates the option for a given chain.
  */
 export const chainOptions = <T>(
-  RPCOptions: MultiChainRPCOptions,
+  options: MultiChainRPCOptions,
   chain: ChainType
 ): AnyCell<ChainRPCOptions> =>
-  RPCOptions.chains.map((_chains) => {
+  options.chains.map((_chains) => {
     const def = _chains[chain];
     if (!def) throw new Error(`unknown chain: ${chain}`);
     // @todo double check than the given chain is supported
@@ -114,8 +113,8 @@ export const chainOptions = <T>(
           ? starknetMulticall
           : undefined;
     return {
+      ...options,
       chain,
-      RPCOptions: RPCOptions,
       multiCall
     };
   }, "chainOptions");

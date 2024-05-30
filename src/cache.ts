@@ -342,7 +342,7 @@ export class RPCCache {
     const key = await computeHash(q);
     const rpcOpts = await this._RPC._options.get();
     if (rpcOpts instanceof Error) throw rpcOpts;
-    rpcOpts.RPCOptions.dev && console.log("cell=", { key, q, options });
+    rpcOpts.dev && console.log("cell=", { key, q, options });
 
     // @todo do we remove previous validity/retry if unset?
     if (options?.validity) this._validity.set(key, options?.validity);
@@ -359,7 +359,7 @@ export class RPCCache {
       // Append the promise to the list
       this._notify(key, resolve as (data: RPCResult<RPCQuery>) => void);
     });
-    rpcOpts.RPCOptions.dev && console.log({ cache: "rpc", key, newCell: q });
+    rpcOpts.dev && console.log({ cache: "rpc", key, newCell: q });
     // add map of query key and query
     this._queries.set(key, q);
     // we probably want to be undefined first instead of null until its resolved
