@@ -134,8 +134,16 @@ export class LocalRPCSubscriber {
     abi: AnyCell<AbiOfNetwork<N>>,
     functionName: AnyCell<string>,
     args: AnyCell<Args>,
-    options: AnyCell<RPCQueryOptions> = this._proxy.new(null)
+    options: AnyCell<RPCQueryOptions> = this._nullCell
   ) {
+    const opts = this._proxy.map(
+      [options, this._gs._options],
+      (callOpts, gsOpts) => ({
+        ...gsOpts,
+        ...(callOpts || {})
+      }),
+      "call.opts"
+    );
     return addr.map((_addr) =>
       _addr
         ? _addr?.addr._network === StarkNet
@@ -145,13 +153,7 @@ export class LocalRPCSubscriber {
               abi as AnyCell<StarkAbi>,
               functionName,
               args,
-              this._proxy.map(
-                [options, this._gs._options],
-                (callOpts, gsOpts) => ({
-                  ...gsOpts,
-                  ...(callOpts || {})
-                })
-              )
+              opts
             )
           : encodeCall(
               this,
@@ -159,13 +161,7 @@ export class LocalRPCSubscriber {
               abi as AnyCell<ViemAbi>,
               functionName,
               args,
-              this._proxy.map(
-                [options, this._gs._options],
-                (callOpts, gsOpts) => ({
-                  ...gsOpts,
-                  ...(callOpts || {})
-                })
-              )
+              opts
             )
         : null
     );

@@ -12,7 +12,7 @@ import { isErrorResult } from "./error";
 import { retryCodes } from "./errors";
 import { decodeMultiCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
-import type { ChainRPCOptions, RPCOptions } from "./options";
+import type { ChainRPCOptions, MultiChainRPCOptions } from "./options";
 import { decodeStarkMultiCall } from "./starkCall";
 import type {
   ChainType,
@@ -23,6 +23,12 @@ import type {
   RawRPCQuery
 } from "./types";
 
+/**
+ * nowPlus computes an expected time.
+ * @param now current time getter
+ * @param delta interval in **seconds**
+ * @todo `delta` in ms?
+ */
 export const nowPlus = async (
   now: () => number | Promise<number>,
   delta: number
@@ -84,7 +90,6 @@ export class RPCCache {
   _cache: MapCell<Cache, false>;
   // queue for cache
   _cacheQueue: ValueCell<Map<RPCQueryKey, ValueCell<CacheValue<RawRPCQuery>>>>;
-  _cacheSet: ValueCell<Set<RPCQueryKey>>;
 
   /**
    * optional validity for queries
@@ -111,10 +116,9 @@ export class RPCCache {
   _convertToNative: (v: unknown) => unknown;
   _convertFromNative: (v: unknown) => unknown;
 
-  constructor(proxy: SheetProxy, rpc: RPC, options: RPCOptions) {
+  constructor(proxy: SheetProxy, rpc: RPC, options: MultiChainRPCOptions) {
     this._sub = proxy.new(new Map(), "RPCCache._sub");
     this._cacheQueue = proxy.new(new Map(), "RPCCache._cacheList");
-    this._cacheSet = proxy.new(new Set());
 
     this._queries = new Map();
     this._proxy = proxy;
@@ -136,16 +140,15 @@ export class RPCCache {
     this._cache = clockWork(
       proxy,
       cl,
-      [this._expiry, this._sub, this._cacheQueue, this._cacheSet, rpc._options],
+      [this._expiry, this._sub, this._cacheQueue, rpc._options],
       async (
         exp: Record<RPCQueryKey, number>,
         sub: Map<RPCQueryKey, ValueCell<number>>,
         cacheQueue: Map<RPCQueryKey, ValueCell<RPCResult<RPCQuery>>>,
-        cacheSet: Set<RPCQueryKey>,
         rpcOptions: ChainRPCOptions,
         prev: Cache
       ) => {
-        const updateExpiry = [] as [string, Promise<number>][];
+        const updateExpiry = {} as Record<string, Promise<number>>;
         const now = await options.now();
         // expired queries
         const expired = Object.entries(exp)
@@ -162,19 +165,13 @@ export class RPCCache {
         // list of queries that will be requested
         // if no requested queries we return current cache or null
         // if first time
-        const requested = [
-          ...new Set(
-            [...unavailable, ...expired].filter((k) => !cacheSet.has(k))
-          )
-        ];
+        const requested = [...new Set([...unavailable, ...expired])];
         if (!requested.length) return prev || null;
         console.log({ cl: cl.value, requested });
-
-        // Adding keys to set.
-        this._cacheSet.update((s) => {
-          for (const key of unavailable) s.add(key);
-          return s;
-        });
+        if (options?.timeOut) {
+          const timeout = nowPlus(options.now, options.timeOut);
+          for (const key of requested) updateExpiry[key] = timeout;
+        }
 
         const enumerated = requested?.length
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
@@ -276,28 +273,24 @@ export class RPCCache {
             this._retry.has(key) &&
             (isErrorResult(value) || value?.result === null)
           ) {
-            updateExpiry.push([
-              key,
-              nowPlus(
-                options.now,
-                this._validity.has(key)
-                  ? this._validity.get(key)
-                  : this._retry.get(key)
-              )
-            ]);
+            updateExpiry[key] = nowPlus(
+              options.now,
+              this._validity.has(key)
+                ? this._validity.get(key)
+                : this._retry.get(key)
+            );
           } else {
             // if validity => update expiry with now + validity to
             // be picked up by the loop
             if (this._validity.has(key)) {
-              updateExpiry.push([
-                key,
-                nowPlus(
-                  options.now,
-                  this._validity.has(key)
-                    ? this._validity.get(key)
-                    : this._retry.get(key)
-                )
-              ]);
+              updateExpiry[key] = nowPlus(
+                options.now,
+                this._validity.has(key)
+                  ? this._validity.get(key)
+                  : this._retry.get(key)
+              );
+            } else {
+              updateExpiry[key] = undefined;
             }
             this._retry.delete(key);
             cell.set(value);
@@ -307,15 +300,15 @@ export class RPCCache {
           return acc;
         }, {});
 
+        const entries = Object.entries(updateExpiry);
         const updateExpiryResolved = Object.fromEntries(
-          (await Promise.all(updateExpiry.map(([_, v]) => v))).map((v, i) => [
-            updateExpiry[i][0],
-            v
-          ])
+          (await Promise.all(entries.map(([_, v]) => v)))
+            .map((v, i) => [entries[i][0], v] as [string, number])
+            .filter(([_, v]) => v !== undefined)
         );
 
         // update expiries after work and before new tick to prevent cancellation
-        proxy._sheet.queue(this._expiry, { ...updateExpiryResolved });
+        proxy._sheet.queue(this._expiry, updateExpiryResolved);
 
         return {
           ...(prev || ({} as Cache)),
@@ -349,7 +342,7 @@ export class RPCCache {
     const key = await computeHash(q);
     const rpcOpts = await this._RPC._options.get();
     if (rpcOpts instanceof Error) throw rpcOpts;
-    rpcOpts.RPCOptions.dev && console.log("cell=", { key, q, options });
+    rpcOpts.dev && console.log("cell=", { key, q, options });
 
     // @todo do we remove previous validity/retry if unset?
     if (options?.validity) this._validity.set(key, options?.validity);
@@ -366,7 +359,7 @@ export class RPCCache {
       // Append the promise to the list
       this._notify(key, resolve as (data: RPCResult<RPCQuery>) => void);
     });
-    rpcOpts.RPCOptions.dev && console.log({ cache: "rpc", key, newCell: q });
+    rpcOpts.dev && console.log({ cache: "rpc", key, newCell: q });
     // add map of query key and query
     this._queries.set(key, q);
     // we probably want to be undefined first instead of null until its resolved
@@ -374,13 +367,8 @@ export class RPCCache {
       CacheValue<RawRPCQuery>
     >;
     this._cacheQueue.update((_c) => {
-      console.log({ adding: key });
       _c.set(key, cell);
       return _c;
-    });
-    this._cacheSet.update((s) => {
-      s.delete(key);
-      return s;
     });
     return new WrappedCell(cell as ValueCell<CacheValue<Q>>, this._proxy);
   };
@@ -433,7 +421,7 @@ export class RPCCache {
     now: number,
     expiry: Record<string, number>,
     cache: Cache,
-    options: RPCOptions
+    options: MultiChainRPCOptions
   ) {
     const v = cache?.[key];
     if (v === undefined) return false;

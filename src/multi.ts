@@ -6,18 +6,8 @@ import { RPCCache } from "./cache";
 import { RPC } from "./caller";
 
 import type { RPCQueryKey } from "./hash";
-import { defaultRPCOptions } from "./options";
+import { type MultiChainRPCOptions, defaultRPCOptions } from "./options";
 import type { Chain, ChainType, RawRPCQuery } from "./types";
-
-export type MultiChainRPCOptions = {
-  now: () => number | Promise<number>;
-  chains: ValueCell<{ [key: ChainType]: Chain }>;
-  convertToNative: (v: unknown) => unknown;
-  convertFromNative: (v: unknown) => unknown;
-  loopDelay: number; // in ms
-  dev: boolean;
-  rateLimit: number; // in ms
-};
 
 export class MultiChainRPC {
   _proxy: SheetProxy;
