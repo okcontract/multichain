@@ -39,6 +39,7 @@ export type {
   Chain,
   GetBalanceQuery,
   GetBalanceResult,
+  GetEstimateGas,
   GetTransactionReceiptQuery,
   GetTransactionReceiptResult,
   LogEntry,

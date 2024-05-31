@@ -313,7 +313,9 @@ export class RPCCache {
   }
 
   private cachedCell = async (key: RPCQueryKey) => {
-    const cache = await this._cache.get();
+    // we don't want to wait for cache value (especially the first time)
+    // as cacheQueue key is not added yet and necessary for the clock
+    const cache = this._cache.value;
     if (cache instanceof Error) throw cache;
     if (cache?.[key]) return cache[key];
     const queue = await this._cacheQueue.get();
