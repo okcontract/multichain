@@ -13,15 +13,11 @@ test("native balance", async () => {
   const multi = new MultiChainRPC(proxy);
   const rpc = new LocalRPCSubscriber(proxy, multi);
 
-  const addr = proxy.new<EVMAddress>({
-    ty: "c",
-    addr: nativeAddrEVM,
-    chain: "ethereum"
-  });
+  const chain = proxy.new("ethereum");
   const owner = proxy.new<Address>(
     new Address("0x3a401D1B6aB6d751cC268d1420010140dE55eE38")
   );
-  const bal = nativeBalance(proxy, rpc, addr, owner);
+  const bal = nativeBalance(proxy, rpc, chain, owner);
   const v = (await bal.get()) as bigint;
   expect(v).toBeGreaterThan(100000000n);
 });
