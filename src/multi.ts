@@ -1,17 +1,16 @@
 const DEV = false;
 
-import type { SheetProxy, ValueCell } from "@okcontract/cells";
+import type { AnyCell, SheetProxy, ValueCell } from "@okcontract/cells";
 
 import { RPCCache } from "./cache";
 import { RPC } from "./caller";
-
 import type { RPCQueryKey } from "./hash";
 import { defaultRPCOptions } from "./options";
 import type { Chain, ChainType, RawRPCQuery } from "./types";
 
 export type MultiChainRPCOptions = {
   now: () => number | Promise<number>;
-  chains: ValueCell<{ [key: ChainType]: Chain }>;
+  chains: AnyCell<{ [key: ChainType]: Chain }>;
   convertToNative: (v: unknown) => unknown;
   convertFromNative: (v: unknown) => unknown;
   loopDelay: number; // in ms

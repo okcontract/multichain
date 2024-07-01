@@ -1,6 +1,3 @@
-// import * as Config from "../../config.json";
-const DEV = false; // Config.debug.rpc;
-
 import type { SheetProxy, ValueCell, WrappedCell } from "@okcontract/cells";
 
 import type { RPCCache } from "./cache";

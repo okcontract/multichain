@@ -35,6 +35,8 @@ export interface Chain {
   defaultGas?: number;
   /** optional logo */
   readonly logo?: string;
+  /** optional decimals, default: 18 */
+  decimals?: number;
 }
 
 export const RPCVersion = "2.0";
