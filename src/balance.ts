@@ -15,6 +15,7 @@ import type { ChainType } from "./types";
  * @param addr
  * @param owner
  * @returns
+ * @todo refresh balance every 30s?
  */
 export const nativeBalance = (
   proxy: SheetProxy,
