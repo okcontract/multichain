@@ -13,7 +13,11 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist/", "README.md", "LICENSE"],
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "npm run format && vite build",
     "test": "bun test",
@@ -21,22 +25,22 @@
     "definitions": "tsc --project tsconfig.build.json",
     "prepublishOnly": "npm test && npm run build && npm run check && npm run definitions",
     "check": "npx @biomejs/biome check src",
-    "format": "npx @biomejs/biome format src --write && npx @biomejs/biome check src --apply",
+    "format": "npx @biomejs/biome format src --write && npx @biomejs/biome check src --write",
     "formatReadme": "prettier README.md --prose-wrap always --print-width 78 -w"
   },
   "dependencies": {
-    "@okcontract/cells": "^0.3.1",
-    "starknet": "^5.24.3",
+    "@okcontract/cells": "^0.3.3",
+    "starknet": "^6.11.0",
     "viem": "^2.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.7.1",
-    "@types/node": "^20.12.7",
+    "@biomejs/biome": "^1.8.3",
+    "@types/node": "^22.5.4",
     "bun": "^1.1.5",
     "bun-types": "^1.1.5",
-    "happy-dom": "13.0.2",
-    "terser": "5.26.0",
-    "typescript": "5.4.5",
+    "happy-dom": "^15.7.3",
+    "terser": "^5.31.6",
+    "typescript": "^5.5.4",
     "vite": "^5.2.11"
   },
   "repository": {
