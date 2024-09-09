@@ -144,26 +144,29 @@ export class LocalRPCSubscriber {
         ...(callOpts || {})
       })
     );
-    return addr.map((_addr) =>
-      _addr
-        ? _addr?.addr._network === StarkNet
-          ? starkCall(
-              this,
-              addr as AnyCell<EVMAddress<StarkNetType>>,
-              abi as AnyCell<StarkAbi>,
-              functionName,
-              args,
-              opts
-            )
-          : encodeCall(
-              this,
-              addr as AnyCell<EVMAddress<EVMType>>,
-              abi as AnyCell<ViemAbi>,
-              functionName,
-              args,
-              opts
-            )
-        : null
+    return this._proxy.map(
+      [addr],
+      (_addr) =>
+        _addr
+          ? _addr?.addr._network === StarkNet
+            ? starkCall(
+                this,
+                addr as AnyCell<EVMAddress<StarkNetType>>,
+                abi as AnyCell<StarkAbi>,
+                functionName,
+                args,
+                opts
+              )
+            : encodeCall(
+                this,
+                addr as AnyCell<EVMAddress<EVMType>>,
+                abi as AnyCell<ViemAbi>,
+                functionName,
+                args,
+                opts
+              )
+          : null,
+      `call:${functionName.value}`
     );
   }
 
