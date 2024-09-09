@@ -134,40 +134,39 @@ export class LocalRPCSubscriber {
     abi: AnyCell<AbiOfNetwork<N>>,
     functionName: AnyCell<string>,
     args: AnyCell<Args>,
-    options: AnyCell<RPCQueryOptions> = this._proxy.new(null)
+    options: AnyCell<RPCQueryOptions> = this._nullCell
   ) {
-    return addr.map((_addr) =>
-      _addr
-        ? _addr?.addr._network === StarkNet
-          ? starkCall(
-              this,
-              addr as AnyCell<EVMAddress<StarkNetType>>,
-              abi as AnyCell<StarkAbi>,
-              functionName,
-              args,
-              this._proxy.map(
-                [options, this._gs._options],
-                (callOpts, gsOpts) => ({
-                  ...gsOpts,
-                  ...(callOpts || {})
-                })
+    // @todo options could be non-cell?
+    const opts = this._proxy.map(
+      [options, this._gs._options],
+      (callOpts, gsOpts) => ({
+        ...gsOpts,
+        ...(callOpts || {})
+      })
+    );
+    return this._proxy.map(
+      [addr],
+      (_addr) =>
+        _addr
+          ? _addr?.addr._network === StarkNet
+            ? starkCall(
+                this,
+                addr as AnyCell<EVMAddress<StarkNetType>>,
+                abi as AnyCell<StarkAbi>,
+                functionName,
+                args,
+                opts
               )
-            )
-          : encodeCall(
-              this,
-              addr as AnyCell<EVMAddress<EVMType>>,
-              abi as AnyCell<ViemAbi>,
-              functionName,
-              args,
-              this._proxy.map(
-                [options, this._gs._options],
-                (callOpts, gsOpts) => ({
-                  ...gsOpts,
-                  ...(callOpts || {})
-                })
+            : encodeCall(
+                this,
+                addr as AnyCell<EVMAddress<EVMType>>,
+                abi as AnyCell<ViemAbi>,
+                functionName,
+                args,
+                opts
               )
-            )
-        : null
+          : null,
+      `call:${functionName.value}`
     );
   }
 

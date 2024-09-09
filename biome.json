@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "organizeImports": {
     "enabled": true
   },
@@ -8,7 +8,9 @@
     "indentWidth": 2
   },
   "javascript": {
-    "formatter": { "trailingComma": "none" }
+    "formatter": {
+      "trailingCommas": "none"
+    }
   },
   "linter": {
     "enabled": true,
@@ -17,6 +19,9 @@
     }
   },
   "files": {
-    "ignore": ["*.d.ts", "*.js"]
+    "ignore": [
+      "*.d.ts",
+      "*.js"
+    ]
   }
 }

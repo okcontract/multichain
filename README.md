@@ -1,7 +1,7 @@
 # multichain: Reactive Blockchain RPC Calls
 
 ![CI](https://github.com/okcontract/multichain/actions/workflows/main.yml/badge.svg)
-![Coverage Status](https://coveralls.io/repos/github/okcontract/multichain/badge.svg?branch=main)
+<!-- ![Coverage Status](https://coveralls.io/repos/github/okcontract/multichain/badge.svg?branch=main) -->
 ![size](https://deno.bundlejs.com/badge?q=@okcontract/multichain)
 
 `multichain` is a low-level library that facilitates reactive blockchain RPC

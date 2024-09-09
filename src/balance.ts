@@ -6,6 +6,7 @@ import type { Address, EVMAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
 import type { EVMType, Network } from "./network";
 import { BalanceQuery } from "./query";
+import type { ChainType } from "./types";
 
 /**
  * native chain balance
@@ -14,19 +15,20 @@ import { BalanceQuery } from "./query";
  * @param addr
  * @param owner
  * @returns
+ * @todo refresh balance every 30s?
  */
 export const nativeBalance = (
   proxy: SheetProxy,
   rpc: LocalRPCSubscriber,
-  addr: AnyCell<EVMAddress<EVMType>>,
+  chain: AnyCell<ChainType>,
   owner: AnyCell<Address<EVMType>>
 ): MapCell<bigint | null, boolean> => {
   const cell = rpc.get(
     proxy,
     proxy.map(
-      [addr, owner],
-      (_evm, _owner) =>
-        _owner && _evm?.chain ? [_evm?.chain, BalanceQuery(_owner)] : null,
+      [chain, owner],
+      (_chain, _owner) =>
+        _owner && _chain ? [_chain, BalanceQuery(_owner)] : null,
       "nativeBalance.args"
     ),
     {
