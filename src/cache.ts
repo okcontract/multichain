@@ -84,6 +84,7 @@ export class RPCCache {
   _cache: MapCell<Cache, false>;
   // queue for cache
   _cacheQueue: ValueCell<Map<RPCQueryKey, ValueCell<CacheValue<RawRPCQuery>>>>;
+  _cacheSet: ValueCell<Set<RPCQueryKey>>;
 
   /**
    * optional validity for queries
@@ -113,6 +114,7 @@ export class RPCCache {
   constructor(proxy: SheetProxy, rpc: RPC, options: RPCOptions) {
     this._sub = proxy.new(new Map(), "RPCCache._sub");
     this._cacheQueue = proxy.new(new Map(), "RPCCache._cacheList");
+    this._cacheSet = proxy.new(new Set());
 
     this._queries = new Map();
     this._proxy = proxy;
@@ -134,11 +136,12 @@ export class RPCCache {
     this._cache = clockWork(
       proxy,
       cl,
-      [this._expiry, this._sub, this._cacheQueue, rpc._options],
+      [this._expiry, this._sub, this._cacheQueue, this._cacheSet, rpc._options],
       async (
         exp: Record<RPCQueryKey, number>,
         sub: Map<RPCQueryKey, ValueCell<number>>,
         cacheQueue: Map<RPCQueryKey, ValueCell<RPCResult<RPCQuery>>>,
+        cacheSet: Set<RPCQueryKey>,
         rpcOptions: ChainRPCOptions,
         prev: Cache
       ) => {
@@ -159,8 +162,19 @@ export class RPCCache {
         // list of queries that will be requested
         // if no requested queries we return current cache or null
         // if first time
-        const requested = [...new Set([...unavailable, ...expired])];
+        const requested = [
+          ...new Set(
+            [...unavailable, ...expired].filter((k) => !cacheSet.has(k))
+          )
+        ];
         if (!requested.length) return prev || null;
+        console.log({ cl: cl.value, requested });
+
+        // Adding keys to set.
+        this._cacheSet.update((s) => {
+          for (const key of unavailable) s.add(key);
+          return s;
+        });
 
         const enumerated = requested?.length
           ? this._RPC._enumerate(requested, this._queries, rpcOptions)
@@ -360,8 +374,13 @@ export class RPCCache {
       CacheValue<RawRPCQuery>
     >;
     this._cacheQueue.update((_c) => {
+      console.log({ adding: key });
       _c.set(key, cell);
       return _c;
+    });
+    this._cacheSet.update((s) => {
+      s.delete(key);
+      return s;
     });
     return new WrappedCell(cell as ValueCell<CacheValue<Q>>, this._proxy);
   };

@@ -80,7 +80,7 @@ export const defaultRPCOptions = (proxy: SheetProxy): MultiChainRPCOptions => ({
   }),
   convertToNative: convertToNative,
   convertFromNative: convertFromNative,
-  loopDelay: 1000,
+  loopDelay: 200,
   dev: false,
   rateLimit: 1000
 });
