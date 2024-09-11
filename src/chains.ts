@@ -2,7 +2,7 @@ import type { Chain } from "./types";
 
 export const ethereum: Chain = {
   currency: "tok:eth",
-  explorer: ["https://etherscan.com"],
+  explorer: ["https://etherscan.io"],
   id: "ethereum",
   name: "Ethereum Mainnet",
   net: "evm",
