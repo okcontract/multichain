@@ -1,6 +1,6 @@
 {
   "name": "@okcontract/multichain",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Low-level library for functional reactive blockchain RPC calls",
   "private": false,
   "main": "dist/multichain.umd.cjs",

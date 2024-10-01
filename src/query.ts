@@ -6,6 +6,7 @@ import {
   BalanceMethod,
   type GetBalanceQuery,
   type GetEstimateGas,
+  type GetTransactionByHashQuery,
   type GetTransactionReceiptQuery,
   type RawRPCQuery,
   latestBlock
@@ -25,6 +26,13 @@ export const TransactionReceiptQuery = (
   tx: `0x${string}`
 ): GetTransactionReceiptQuery => ({
   method: "eth_getTransactionReceipt",
+  params: [tx]
+});
+
+export const TransactionByHashQuery = (
+  tx: `0x${string}`
+): GetTransactionByHashQuery => ({
+  method: "eth_getTransactionByHash",
   params: [tx]
 });
 

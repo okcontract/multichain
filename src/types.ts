@@ -1,4 +1,9 @@
-import type { Log, RpcTransactionReceipt, TransactionRequest } from "viem";
+import type {
+  Log,
+  RpcTransactionReceipt,
+  Transaction,
+  TransactionRequest
+} from "viem";
 
 import type { Address } from "./address";
 import type { CallQueryType, CallResult } from "./ethCall";
@@ -72,6 +77,11 @@ export type GasEstimation = {
   result: string; // The gas amount hex-encoded
 };
 
+export type GetTransactionByHashQuery = {
+  method: "eth_getTransactionByHash";
+  params: [string];
+};
+
 export type GetTransactionReceiptQuery = {
   method: "eth_getTransactionReceipt";
   params: [string];
@@ -79,6 +89,10 @@ export type GetTransactionReceiptQuery = {
 
 export type GetTransactionReceiptResult = {
   result: RpcTransactionReceipt | null;
+};
+
+export type GetTransactionByHashResult = {
+  result: Transaction | null;
 };
 
 export type LogEntry = Log<bigint, number>;
@@ -97,6 +111,7 @@ export type RawRPCQuery =
   | CallQueryType
   | GetEstimateGas
   | GetTransactionReceiptQuery
+  | GetTransactionByHashQuery
   | StarkCallQueryType;
 
 export type RPCQueryOptions = {
@@ -164,11 +179,13 @@ export type RawRPCQueryOf<Q extends RawRPCQuery> = Q extends GetBalanceQuery
       ? CallResult
       : Q extends GetTransactionReceiptQuery
         ? GetTransactionReceiptResult
-        : Q extends GetEstimateGas
-          ? GasEstimation
-          : Q extends StarkCallQueryType
-            ? StarkCallResult
-            : never;
+        : Q extends GetTransactionByHashQuery
+          ? GetTransactionByHashResult
+          : Q extends GetEstimateGas
+            ? GasEstimation
+            : Q extends StarkCallQueryType
+              ? StarkCallResult
+              : never;
 
 export type RPCResultNoError<Q extends RawRPCQuery> = {
   jsonrpc: "2.0";
