@@ -135,7 +135,7 @@ export class LocalRPCSubscriber {
     functionName: AnyCell<string>,
     args: AnyCell<Args>,
     options: AnyCell<RPCQueryOptions> = this._nullCell
-  ) {
+  ): MapCell<unknown, false> {
     // @todo options could be non-cell?
     const opts = this._proxy.map(
       [options, this._gs._options],

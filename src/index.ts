@@ -2,9 +2,8 @@
 
 export {
   Address,
-  ContractType,
-  WalletType,
   chain_balance,
+  ContractType,
   isEVMAddr,
   isNativeAddrEVM as isNativeAddr,
   isNullAddrEVM as isNullAddr,
@@ -12,6 +11,7 @@ export {
   isStarknetAddr,
   nativeAddrEVM as nativeAddr,
   nullAddrEVM as nullAddr,
+  WalletType,
   type ChainID as ChainType,
   type EVMAddress,
   type AddressType as WalletAddressType
@@ -32,8 +32,8 @@ export {
 
 export {
   BalanceMethod,
-  RPCVersion,
-  latestBlock
+  latestBlock,
+  RPCVersion
 } from "./types";
 export type {
   Chain,
@@ -43,13 +43,13 @@ export type {
   GetTransactionReceiptQuery,
   GetTransactionReceiptResult,
   LogEntry,
+  RawRPCQuery,
   RPCCaller,
   RPCError,
   RPCErrorResult,
   RPCQuery,
   RPCQueryOptions,
   RPCResult,
-  RawRPCQuery,
   TokenQuery
 } from "./types";
 
@@ -65,15 +65,15 @@ export {
   type CallResult
 } from "./ethCall";
 export { estimateGas } from "./gasEstimate";
-export { getTransactionReceipt } from "./getTransactionReceipt";
+export { getTransaction, getTransactionReceipt } from "./getTransactionReceipt";
 export { mapArrayRec } from "./mapArrayRec";
 export { defaultRPCOptions } from "./options";
 export {
   BalanceQuery,
   EstimateGasQuery,
+  isRPCQuery,
   RawRPCQueryForHash,
-  TransactionReceiptQuery,
-  isRPCQuery
+  TransactionReceiptQuery
 } from "./query";
 export { starkCall } from "./starkCall";
 export { chainToViem } from "./viem";
