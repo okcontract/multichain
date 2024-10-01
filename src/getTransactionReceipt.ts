@@ -38,7 +38,9 @@ export const getTransaction = (
 ) => {
   const query = rpc._proxy.map(
     [hash, ch],
-    (_hash, _ch) => (_hash ? [_ch, TransactionByHashQuery(_hash)] : null),
+    (_hash, _ch) =>
+      // @todo Starknet
+      _hash && isHash(_hash) ? [_ch, TransactionByHashQuery(_hash)] : null,
     "getTransactionReceipt.query"
   ) as AnyCell<[ChainType, GetTransactionByHashQuery]>;
   return rpc.get(rpc._proxy, query, {
