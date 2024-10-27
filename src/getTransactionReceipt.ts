@@ -1,4 +1,4 @@
-import { formatTransactionReceipt } from "viem";
+import { formatTransactionReceipt, isHash } from "viem";
 
 import type { AnyCell } from "@okcontract/cells";
 
