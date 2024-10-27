@@ -61,7 +61,7 @@ export const starknet: Chain = {
   id: "starknet",
   name: "Starknet Mainnet",
   net: "strk",
-  numid: 1n,
+  numid: BigInt("0x534e5f4d41494e"),
   rpc: [
     "https://starknet-mainnet.public.blastapi.io",
     "https://rpc.starknet.lava.build",
