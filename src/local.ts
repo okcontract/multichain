@@ -9,7 +9,7 @@ import {
   nextSubscriber
 } from "@okcontract/cells";
 
-import type { EVMAddress } from "./address";
+import type { ChainAddress } from "./address";
 import { encodeCall } from "./ethCall";
 import { type RPCQueryKey, computeHash } from "./hash";
 import type { MultiChainRPC } from "./multi";
@@ -130,7 +130,7 @@ export class LocalRPCSubscriber {
   }
 
   call<Args extends AnyCell<unknown>[], N extends Network>(
-    addr: AnyCell<EVMAddress<N>>,
+    addr: AnyCell<ChainAddress<N>>,
     abi: AnyCell<AbiOfNetwork<N>>,
     functionName: AnyCell<string>,
     args: AnyCell<Args>,
@@ -151,7 +151,7 @@ export class LocalRPCSubscriber {
           ? _addr?.addr._network === StarkNet
             ? starkCall(
                 this,
-                addr as AnyCell<EVMAddress<StarkNetType>>,
+                addr as AnyCell<ChainAddress<StarkNetType>>,
                 abi as AnyCell<StarkAbi>,
                 functionName,
                 args,
@@ -159,7 +159,7 @@ export class LocalRPCSubscriber {
               )
             : encodeCall(
                 this,
-                addr as AnyCell<EVMAddress<EVMType>>,
+                addr as AnyCell<ChainAddress<EVMType>>,
                 abi as AnyCell<ViemAbi>,
                 functionName,
                 args,

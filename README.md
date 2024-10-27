@@ -43,7 +43,7 @@ import {
   MultiChainRPC,
   LocalRPCSubscriber,
   Address,
-  EVMAddress,
+  ChainAddress,
 } from "@okcontract/multichain";
 
 // Create a cells proxy
@@ -56,7 +56,7 @@ const local = new LocalRPCSubscriber(proxy, multi);
 
 // Create cells for ABI, contract, method, and args
 const abi = proxy.new(parseAbi(["..."]));
-const contract = proxy.new<EVMAddress>({
+const contract = proxy.new<ChainAddress>({
   addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
   chain: "sepolia",
 });

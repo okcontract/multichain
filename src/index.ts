@@ -13,7 +13,7 @@ export {
   nullAddrEVM as nullAddr,
   WalletType,
   type ChainID as ChainType,
-  type EVMAddress,
+  type ChainAddress,
   type AddressType as WalletAddressType
 } from "./address";
 export { ethereum, mumbai, optimism, sepolia, starknet } from "./chains";

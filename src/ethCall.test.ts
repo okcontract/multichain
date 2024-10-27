@@ -4,7 +4,7 @@ import { type Abi, parseAbi } from "viem";
 
 import { Sheet, SheetProxy, sleep } from "@okcontract/cells";
 
-import { Address, ContractType, type EVMAddress } from "./address";
+import { Address, ContractType, type ChainAddress } from "./address";
 import { balanceOf } from "./balance";
 import { LocalRPCSubscriber } from "./local";
 import { MultiChainRPC } from "./multi";
@@ -26,7 +26,7 @@ test("call function", async () => {
   const local = new LocalRPCSubscriber(proxy, multi);
 
   const erc20ABI = proxy.new(erc20Abi as Abi, "erc20ABI");
-  const usdcContract = proxy.new<EVMAddress>(
+  const usdcContract = proxy.new<ChainAddress>(
     {
       addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
       chain: "sepolia",
@@ -75,7 +75,7 @@ test("multicall", async () => {
   const local = new LocalRPCSubscriber(proxy, multi);
 
   const erc20ABI = proxy.new(erc20Abi as Abi, "erc20ABI");
-  const usdcContract = proxy.new<EVMAddress>(
+  const usdcContract = proxy.new<ChainAddress>(
     {
       addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
       chain: "sepolia",
@@ -121,7 +121,7 @@ test("query with bad response", async () => {
     parseAbi(["function fake() public view returns (string)"]) as Abi,
     "erc20ABI"
   );
-  const usdcContract = proxy.new<EVMAddress>(
+  const usdcContract = proxy.new<ChainAddress>(
     {
       addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
       chain: "sepolia",
@@ -155,7 +155,7 @@ test(
       parseAbi(["function fake() public view returns (string)"]) as Abi,
       "erc20ABI"
     );
-    const usdcContract = proxy.new<EVMAddress>(
+    const usdcContract = proxy.new<ChainAddress>(
       {
         addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
         chain: "sepolia",
@@ -192,7 +192,7 @@ test(
     const local = new LocalRPCSubscriber(proxy, multi);
 
     const erc20ABI = proxy.new(erc20Abi as Abi, "erc20ABI");
-    const usdcContract = proxy.new<EVMAddress>(
+    const usdcContract = proxy.new<ChainAddress>(
       {
         addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
         chain: "sepolia",
@@ -233,7 +233,7 @@ test("call function with null abi", async () => {
   const local = new LocalRPCSubscriber(proxy, multi);
 
   const nullABI = proxy.new(null);
-  const daiContract = proxy.new<EVMAddress>(
+  const daiContract = proxy.new<ChainAddress>(
     {
       addr: new Address("0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9"),
       chain: "ethereum",

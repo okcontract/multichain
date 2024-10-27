@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { type Abi, parseAbi } from "viem";
 
 import { Sheet, SheetProxy } from "@okcontract/cells";
-import { Address, type EVMAddress } from "./address";
+import { Address, type ChainAddress } from "./address";
 import { polygon } from "./cache.test";
 import { RPC } from "./caller";
 import { ethCallQuery } from "./ethCall";
@@ -120,7 +120,7 @@ test("multicall", async () => {
   if (opts instanceof Error) throw opts;
 
   const erc20ABI = proxy.new(erc20Abi as Abi, "erc20ABI");
-  const contract = proxy.new<EVMAddress>(
+  const contract = proxy.new<ChainAddress>(
     {
       addr: new Address("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"),
       chain: "sepolia",

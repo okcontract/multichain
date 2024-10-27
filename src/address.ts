@@ -16,7 +16,7 @@ export type ChainID = string;
 
 export const WalletType = "w" as const;
 export const ContractType = "c" as const;
-export const SmartAccount = "sa";
+export const SmartAccount = "sa" as const;
 
 /**
  * AddressType defines different types of addresses.
@@ -30,9 +30,9 @@ export type AddressType =
   | typeof SmartAccount;
 
 /**
- * EVMAddress represents an EVM address (either wallet or contract).
+ * ChainAddress represents an EVM address (either wallet or contract).
  */
-export interface EVMAddress<N extends Network = EVMType> {
+export interface ChainAddress<N extends Network = EVMType> {
   /** name (optional) */
   n?: string;
   addr: Address<N>; // | typeof chain_balance; // FIXME: `0x[A-Fa-f0-9]{40}`
@@ -141,19 +141,19 @@ export const isNativeAddrEVM = (addr: string) =>
   getAddress(addr) === nativeAddrEVM.toString();
 
 export const isEVMAddr = (
-  addr: EVMAddress<Network>
-): addr is EVMAddress<EVMType> => addr.addr._network === EVM;
+  addr: ChainAddress<Network>
+): addr is ChainAddress<EVMType> => addr.addr._network === EVM;
 
 export const isStarknetAddr = (
-  addr: EVMAddress<Network>
-): addr is EVMAddress<StarkNetType> => addr.addr._network === StarkNet;
+  addr: ChainAddress<Network>
+): addr is ChainAddress<StarkNetType> => addr.addr._network === StarkNet;
 
 /**
  * isRealAddress checks if the address is defined and not the native virtual address.
  * @param addr
  * @returns
  */
-export const isRealAddr = <N extends Network>(addr: EVMAddress<N>) =>
+export const isRealAddr = <N extends Network>(addr: ChainAddress<N>) =>
   isEVMAddr(addr)
     ? addr && !addr?.addr.equals(nativeAddrEVM)
     : isStarknetAddr(addr)

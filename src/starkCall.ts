@@ -8,7 +8,7 @@ import {
   uncellify
 } from "@okcontract/cells";
 
-import type { Address, EVMAddress } from "./address";
+import type { Address, ChainAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
 import { mapArrayRec } from "./mapArrayRec";
 import type { StarkNetType } from "./network";
@@ -183,7 +183,7 @@ export const starkCall = <
   Args extends AnyCell<unknown>[] | null
 >(
   local: LocalRPCSubscriber,
-  addr: AnyCell<EVMAddress<StarkNetType>>,
+  addr: AnyCell<ChainAddress<StarkNetType>>,
   abi: AnyCell<Abi>,
   functionName: AnyCell<string>,
   args: AnyCell<Args>,

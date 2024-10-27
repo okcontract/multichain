@@ -3,7 +3,7 @@ import { toHex } from "viem";
 
 import { type AnyCell, Sheet, SheetProxy, uncellify } from "@okcontract/cells";
 
-import { Address, type EVMAddress } from "./address";
+import { Address, type ChainAddress } from "./address";
 import { LocalRPCSubscriber } from "./local";
 import { MultiChainRPC } from "./multi";
 import { StarkNet, type StarkNetType } from "./network";
@@ -228,7 +228,7 @@ test(
     const multi = new MultiChainRPC(proxy);
     const local = new LocalRPCSubscriber(proxy, multi);
 
-    const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
+    const ethERC20Address: AnyCell<ChainAddress<StarkNetType>> = proxy.new({
       chain: "starknet",
       addr: new Address(
         "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
@@ -263,7 +263,7 @@ test(
     const multi = new MultiChainRPC(proxy);
     const local = new LocalRPCSubscriber(proxy, multi);
 
-    const ethERC20Address: AnyCell<EVMAddress<StarkNetType>> = proxy.new({
+    const ethERC20Address: AnyCell<ChainAddress<StarkNetType>> = proxy.new({
       chain: "starknet",
       addr: new Address(
         "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",

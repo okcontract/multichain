@@ -2,7 +2,7 @@ import type { Abi } from "viem";
 
 import type { AnyCell, MapCell, SheetProxy } from "@okcontract/cells";
 
-import type { Address, EVMAddress } from "./address";
+import type { Address, ChainAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
 import type { EVMType, Network } from "./network";
 import { BalanceQuery } from "./query";
@@ -58,7 +58,7 @@ export const nativeBalance = (
 export const balanceOf = <N extends Network>(
   proxy: SheetProxy,
   rpc: LocalRPCSubscriber,
-  addr: AnyCell<EVMAddress<N>>,
+  addr: AnyCell<ChainAddress<N>>,
   abi: AnyCell<Abi>, // @todo use Default in Multi
   args: AnyCell<[AnyCell<Address<N>>] | []>
 ) =>

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 
 import { Sheet, SheetProxy } from "@okcontract/cells";
 
-import { Address, type EVMAddress, nativeAddrEVM } from "./address";
+import { Address, type ChainAddress, nativeAddrEVM } from "./address";
 import { nativeBalance } from "./balance";
 import { LocalRPCSubscriber } from "./local";
 import { MultiChainRPC } from "./multi";

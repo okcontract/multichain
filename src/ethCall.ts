@@ -15,7 +15,7 @@ import {
   uncellify
 } from "@okcontract/cells";
 
-import type { Address, EVMAddress } from "./address";
+import type { Address, ChainAddress } from "./address";
 import type { LocalRPCSubscriber } from "./local";
 import { mapArrayRec } from "./mapArrayRec";
 import { CallQuery } from "./query";
@@ -44,7 +44,7 @@ export type CallResult = {
 
 export const ethCallQuery = <T extends unknown[]>(
   proxy: SheetProxy,
-  addr: AnyCell<EVMAddress>,
+  addr: AnyCell<ChainAddress>,
   abi: AnyCell<Abi>,
   functionName: AnyCell<string>,
   args: AnyCell<T>,
@@ -153,7 +153,7 @@ export const encodeCall = <
   // @todo these should be from CoreExecution
   local: LocalRPCSubscriber,
   // @todo cells or values?
-  addr: AnyCell<EVMAddress>,
+  addr: AnyCell<ChainAddress>,
   abi: AnyCell<Abi>,
   functionName: AnyCell<string>,
   args: AnyCell<Args>,
